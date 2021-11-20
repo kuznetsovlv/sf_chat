@@ -1,5 +1,5 @@
 #Makefile
-objects = main.o
+objects = main.o user.o
 
 .PHONY: all
 all: chat
@@ -7,7 +7,8 @@ all: chat
 chat: ${objects}
 	gcc -o chat ${objects} -lstdc++
 
-main.o:
+main.o: user.h
+user.o: user.h
 
 .PHONY: clean
 clean:
