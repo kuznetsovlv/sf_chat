@@ -13,6 +13,10 @@ class Server final
 
 	Server();
 
+	bool hasUser(std::string)const noexcept;
+	bool createUser(std::string, std::string, std::string);
+	void saveMessage(Message);
+
 	public:
 	Server(Server&) = delete;
 	Server(Server&&) = delete;
