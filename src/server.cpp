@@ -12,6 +12,13 @@ Server::Server()
 	_users[ALL] = new User();
 }
 
+Server::~Server() {
+	for(auto iter = _users.begin(); iter != _users.end(); ++iter)
+	{
+		delete iter->second;
+	}
+}
+
 bool Server::hasUser(std::string login)const noexcept
 {
 	return _users.find(login) != _users.end();

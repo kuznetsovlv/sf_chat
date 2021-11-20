@@ -11,27 +11,17 @@ User::User(std::string login, std::string fullName, std::string password)noexcep
 {
 }
 
-std::string User::getLogin()const noexcept
+std::string User::login()const noexcept
 {
 	return _login;
 }
 
-std::string User::getFullName()const noexcept
+std::string User::fullName()const noexcept
 {
 	return _fullName;
 }
 
-std::string User::getPassword()const noexcept
+std::string User::password()const noexcept
 {
 	return _password;
-}
-
-void User::setFullName(std::string fullName)noexcept
-{
-	_fullName = fullName;
-}
-
-void User::setPassword(std::string password)noexcept
-{
-	_password = password;
 }

@@ -3,6 +3,7 @@
 int main()
 {
 	Server *server = getServer();
+	delete server;
 
 	return 0;
 }
