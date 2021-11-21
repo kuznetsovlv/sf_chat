@@ -1,6 +1,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "client.h"
 #include "server.h"
 #include "message.h"
 #include "user.h"
@@ -50,4 +51,12 @@ Server *getServer()
 	}
 
 	return server;
+}
+
+void deleteServer() {
+	if(server)
+	{
+		delete server;
+		server = nullptr;
+	}
 }
