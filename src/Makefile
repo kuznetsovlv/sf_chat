@@ -7,7 +7,7 @@ all: chat
 chat: ${objects}
 	gcc -o chat ${objects} -lstdc++
 
-main.o: message.h server.h user.h
+main.o: client.h message.h server.h user.h
 message.o: message.h user.h
 server.o: server.h
 user.o: user.h
