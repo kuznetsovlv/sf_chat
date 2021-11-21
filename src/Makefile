@@ -7,10 +7,10 @@ all: chat
 chat: ${objects}
 	gcc -o chat ${objects} -lstdc++
 
-main.o: client.h message.h request.h server.h user.h
-client.o: client.h message.h request.h server.h user.h
+main.o: client.h request.h
+client.o: client.h message.h request.h response.h response.cpp server.h user.h
 message.o: message.h user.h
-server.o: server.h client.h message.h request.h user.h
+server.o: server.h client.h message.h request.h response.h response.cpp user.h
 user.o: user.h
 
 .PHONY: clean

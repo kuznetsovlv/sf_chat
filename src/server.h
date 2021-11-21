@@ -3,6 +3,7 @@
 #include <map>
 #include <vector>
 #include "message.h"
+#include "response.h"
 #include "request.h"
 
 class Client;
@@ -25,6 +26,10 @@ class Server final
 	Server(Server&) = delete;
 	Server(Server&&) = delete;
 	~Server();
+
+	Response<void> request(RegistrationRequest&)noexcept;
+	Response<User> request(LoginRequest&)noexcept;
+	Response<void> request(MessageRequest&)noexcept;
 
 	Server &operator=(Server&) = delete;
 	Server &&operator=(Server&&) = delete;

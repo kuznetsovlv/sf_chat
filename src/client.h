@@ -4,6 +4,7 @@
 #include "message.h"
 #include "server.h"
 #include "request.h"
+#include "response.h"
 #include "user.h"
 
 class Client final
@@ -12,6 +13,7 @@ class Client final
 	User *_user = nullptr;
 	Server *_server;
 
+	void chat()const noexcept;
 	void login();
 	void logout() noexcept;
 	void registerUser();
