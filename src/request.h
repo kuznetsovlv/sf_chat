@@ -29,9 +29,11 @@ class RegistrationRequest final: public Request
 	std::string _password;
 
 	public:
-	RegistrationRequest(Client*,std::string,std::string,std::string)noexcept;
+	RegistrationRequest(Client&,std::string,std::string,std::string)noexcept;
 	RegistrationRequest(RegistrationRequest&) = delete;
 	RegistrationRequest(RegistrationRequest&&) = delete;
+
+	~RegistrationRequest() = default;
 
 	std::string login()const noexcept;
 	std::string fullName()const noexcept;
@@ -48,9 +50,11 @@ class LoginRequest final: public Request
 	std::string _password;
 
 	public:
-	LoginRequest(Client*,std::string,std::string)noexcept;
+	LoginRequest(Client&,std::string,std::string)noexcept;
 	LoginRequest(LoginRequest&) = delete;
 	LoginRequest(LoginRequest&&) = delete;
+
+	~LoginRequest() = default;
 
 	std::string login()const noexcept;
 	std::string password()const noexcept;
@@ -65,9 +69,11 @@ class MessageRequest final: public Request
 	Message &_message;
 
 	public:
-	MessageRequest(Client*,Message&)noexcept;
+	MessageRequest(Client&,Message&)noexcept;
 	MessageRequest(MessageRequest&) = delete;
 	MessageRequest(MessageRequest&&) = delete;
+
+	~MessageRequest() = default;
 
 	Message &message()const noexcept;
 
