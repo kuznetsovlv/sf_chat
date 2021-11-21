@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-//#include "server.h"
+#include "server.h"
 
 extern const std::string ALL;
 
