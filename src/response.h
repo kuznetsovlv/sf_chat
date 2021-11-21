@@ -10,18 +10,19 @@ class Response final
 	T *_data;
 
 	public:
+	Response(bool,std::string)noexcept;
 	Response(bool,std::string, T*)noexcept;
-	Response(Response<T>&);
+	Response(Response<T>&)noexcept;
 	Response(Response<T>&&)noexcept;
 
-	~Response()noexcept;
+	~Response() = default; //Память *_data может быть нужна после уничтожения объекта, удаляться она должна в другом месте
 
 	bool success()const noexcept;
 	std::string message()const noexcept;
 	T *data()const noexcept;
 
-	Response &operator=(Response<T>&);
-	Response &&operator=(Response<T>&&);
+	Response<T> &operator=(Response<T>&)noexcept;
+	Response<T> &&operator=(Response<T>&&)noexcept;
 };
 
 #include "response.cpp"
