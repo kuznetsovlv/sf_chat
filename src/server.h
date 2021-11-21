@@ -10,7 +10,7 @@ class User;
 class Server final
 {
 	private:
-	std::map<std::string, User*, std::less<std::string>> _users;
+	std::map<std::string, User*> _users;
 	std::vector<Message> _messages;
 	std::vector<Client*> _clients;
 
