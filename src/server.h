@@ -29,6 +29,7 @@ class Server final
 
 	Response<void> request(RegistrationRequest&)noexcept;
 	Response<User> request(LoginRequest&)noexcept;
+	Response<void> request(LogoutRequest&)noexcept;
 	Response<void> request(MessageRequest&)noexcept;
 
 	Server &operator=(Server&) = delete;

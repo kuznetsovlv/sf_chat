@@ -10,7 +10,7 @@ class Request
 	Client *_client;
 
 	public:
-	Request(Client&)noexcept;
+	Request(Client*)noexcept;
 	Request(Request&) = delete;
 	Request(Request&&) = delete;
 	virtual ~Request() = 0;
@@ -29,11 +29,9 @@ class RegistrationRequest final: public Request
 	std::string _password;
 
 	public:
-	RegistrationRequest(Client&,std::string,std::string,std::string)noexcept;
+	RegistrationRequest(Client*,std::string,std::string,std::string)noexcept;
 	RegistrationRequest(RegistrationRequest&) = delete;
 	RegistrationRequest(RegistrationRequest&&) = delete;
-
-	~RegistrationRequest() = default;
 
 	std::string login()const noexcept;
 	std::string fullName()const noexcept;
@@ -50,11 +48,9 @@ class LoginRequest final: public Request
 	std::string _password;
 
 	public:
-	LoginRequest(Client&,std::string,std::string)noexcept;
+	LoginRequest(Client*,std::string,std::string)noexcept;
 	LoginRequest(LoginRequest&) = delete;
 	LoginRequest(LoginRequest&&) = delete;
-
-	~LoginRequest() = default;
 
 	std::string login()const noexcept;
 	std::string password()const noexcept;
@@ -63,17 +59,21 @@ class LoginRequest final: public Request
 	LoginRequest &&operator=(LoginRequest&&) = delete;
 };
 
+class LogoutRequest final: public Request
+{
+	public:
+	LogoutRequest(Client*)noexcept;
+};
+
 class MessageRequest final: public Request
 {
 	private:
 	Message &_message;
 
 	public:
-	MessageRequest(Client&,Message&)noexcept;
+	MessageRequest(Client*,Message&)noexcept;
 	MessageRequest(MessageRequest&) = delete;
 	MessageRequest(MessageRequest&&) = delete;
-
-	~MessageRequest() = default;
 
 	Message &message()const noexcept;
 
