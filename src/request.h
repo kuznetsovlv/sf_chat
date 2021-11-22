@@ -10,7 +10,7 @@ class Request
 	Client *_client;
 
 	public:
-	Request(Client&)noexcept;
+	Request(Client*)noexcept;
 	Request(Request&) = delete;
 	Request(Request&&) = delete;
 	virtual ~Request() = 0;
@@ -57,6 +57,12 @@ class LoginRequest final: public Request
 
 	LoginRequest &operator=(LoginRequest&) = delete;
 	LoginRequest &&operator=(LoginRequest&&) = delete;
+};
+
+class LogoutRequest final: public Request
+{
+	public:
+	LogoutRequest(Client*)noexcept;
 };
 
 class MessageRequest final: public Request
