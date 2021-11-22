@@ -18,9 +18,10 @@ class Server final
 	Server();
 
 	bool hasUser(std::string)const noexcept;
-	bool createUser(std::string, std::string, std::string);
+	void createUser(std::string, std::string, std::string);
 	void saveMessage(Message);
 	void subscribe(Client*);
+	void unsubscribe(Client*);
 
 	public:
 	Server(Server&) = delete;
