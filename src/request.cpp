@@ -51,11 +51,15 @@ LogoutRequest::LogoutRequest(Client *client)noexcept:Request(client)
 {
 }
 
-MessageRequest::MessageRequest(Client *client, Message &message)noexcept:Request(client),_message(message)
+SendMessageRequest::SendMessageRequest(Client *client, Message &message)noexcept:Request(client),_message(message)
 {
 }
 
-Message &MessageRequest::message()const noexcept
+Message &SendMessageRequest::message()const noexcept
 {
 	return _message;
+}
+
+GetMessageRequest::GetMessageRequest(Client *client)noexcept:Request(client)
+{
 }

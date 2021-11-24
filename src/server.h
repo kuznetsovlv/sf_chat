@@ -12,15 +12,19 @@ class Server final
 {
 	private:
 	std::map<std::string, User*> _users;
+	std::map<std::string, int> _lastSent;
 	std::vector<Message> _messages;
 	std::vector<Client*> _clients;
 
 	Server();
 
 	bool hasUser(std::string)const noexcept;
-	bool createUser(std::string, std::string, std::string);
+	void createUser(std::string, std::string, std::string);
 	void saveMessage(Message);
 	void subscribe(Client*);
+	void unsubscribe(Client*);
+	bool subscribed(Client*)const noexcept;
+	Message *message(std::string);
 
 	public:
 	Server(Server&) = delete;
@@ -30,7 +34,8 @@ class Server final
 	Response<void> request(RegistrationRequest&)noexcept;
 	Response<User> request(LoginRequest&)noexcept;
 	Response<void> request(LogoutRequest&)noexcept;
-	Response<void> request(MessageRequest&)noexcept;
+	Response<void> request(SendMessageRequest&)noexcept;
+	Response<Message> request(GetMessageRequest&)noexcept;
 
 	Server &operator=(Server&) = delete;
 	Server &&operator=(Server&&) = delete;

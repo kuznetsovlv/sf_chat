@@ -65,18 +65,29 @@ class LogoutRequest final: public Request
 	LogoutRequest(Client*)noexcept;
 };
 
-class MessageRequest final: public Request
+class SendMessageRequest final: public Request
 {
 	private:
 	Message &_message;
 
 	public:
-	MessageRequest(Client*,Message&)noexcept;
-	MessageRequest(MessageRequest&) = delete;
-	MessageRequest(MessageRequest&&) = delete;
+	SendMessageRequest(Client*,Message&)noexcept;
+	SendMessageRequest(SendMessageRequest&) = delete;
+	SendMessageRequest(SendMessageRequest&&) = delete;
 
 	Message &message()const noexcept;
 
-	MessageRequest &operator=(MessageRequest&) = delete;
-	MessageRequest &&operator=(MessageRequest&&) = delete;
+	SendMessageRequest &operator=(SendMessageRequest&) = delete;
+	SendMessageRequest &&operator=(SendMessageRequest&&) = delete;
+};
+
+class GetMessageRequest final: public Request
+{
+	public:
+	GetMessageRequest(Client*)noexcept;
+	GetMessageRequest(GetMessageRequest&) = delete;
+	GetMessageRequest(GetMessageRequest&&) = delete;
+
+	GetMessageRequest &operator=(GetMessageRequest&) = delete;
+	GetMessageRequest &&operator=(GetMessageRequest&&) = delete;
 };

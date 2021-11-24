@@ -2,7 +2,7 @@
 #include "response.h"
 
 template<class T>
-Response<T>::Response(bool success, std::string messge)noexcept:Response(success, message, nullptr)
+Response<T>::Response(bool success, std::string message)noexcept:Response(success, message, nullptr)
 {
 }
 
