@@ -3,6 +3,7 @@
 #include <vector>
 #include "message.h"
 #include "server.h"
+#include "serverRequest.h"
 #include "request.h"
 #include "response.h"
 #include "user.h"
@@ -12,6 +13,7 @@ class Client final
 	private:
 	User *_user = nullptr;
 	Server *_server;
+	bool hasNewMessage = false;
 
 	void chat()const noexcept;
 	void login();
@@ -26,7 +28,7 @@ class Client final
 
 	void start();
 
-	void setMessage(Message&) const noexcept;
+	void request(NewMessageServerRequest&)noexcept;
 	std::string user()const noexcept;
 
 	Client &operator=(Client&) = delete;
