@@ -8,6 +8,7 @@ int main()
 	try
 	{
 		Client client(getServer());
+		client.start();
 	}
 	catch(std::exception &error)
 	{

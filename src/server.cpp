@@ -119,7 +119,7 @@ Response<User> Server::request(LoginRequest &request)noexcept
 	{
 		User *user = _users[request.login()];
 
-		if(user->password() == request.login())
+		if(user->password() == request.password())
 		{
 			try
 			{

@@ -13,12 +13,13 @@ class Client final
 	private:
 	User *_user = nullptr;
 	Server *_server;
-	bool hasNewMessage = false;
+	bool _hasNewMessage = false;
 
-	void chat()const noexcept;
+	void chat();
 	void login();
 	void logout() noexcept;
 	void registerUser();
+	void showMessages()noexcept;
 
 	public:
 	Client(Server*) noexcept;
