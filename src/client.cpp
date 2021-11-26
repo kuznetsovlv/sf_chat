@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "client.h"
+#include "input.h"
 #include "server.h"
 #include "serverRequest.h"
 #include "request.h"
@@ -29,12 +30,42 @@ void Client::chat()
 		std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
 
 		std::string message;
-
-		std::cin >> message;
+		std::getline(std::cin, message);
 
 		if(message == "!quit")
 		{
 			return;
+		}
+
+		std::string to;
+
+		if(message.front() == '@')
+		{
+			auto pos = message.find(":");
+
+			if(pos == std::string::npos)
+			{
+				to = ALL;
+			}
+			else
+			{
+				to = message.substr(1, pos - 1);
+				message.erase(0, pos + 1);
+			}
+		}
+		else
+		{
+			to = ALL;
+		}
+
+		Message msg(message, user(), to);
+
+		SendMessageRequest request(this, msg);
+		Response<void> response = _server->request(request);
+
+		if(!response.success())
+		{
+			std::cout << response.message() << std::endl;
 		}
 	}
 }
@@ -48,49 +79,64 @@ void Client::logout() noexcept
 
 void Client::login()
 {
-	std::string login, password;
-
 	for(unsigned i = 0; i < 3; ++i)
 	{
 		std::cout << "Login: ";
-		std::cin >> login;
+		std::string login;
+		ignore();
+		std::getline(std::cin, login);
 		std::cout << "Password: ";
 		//TODO: Разобраться, как скрыть ввод.
-		std::cin >> password;
+		std::string password;
+		std::getline(std::cin, password);
 
-		LoginRequest request(this, login, password);
-		Response<User> response = _server->request(request);
-
-		if(response.success())
+		if(loginAndChat(login, password))
 		{
-			_user = response.data();
-			std::cout << "Welcom to the chat, " << _user->login() << "!" << std::endl;
-			chat();
 			return;
 		}
-
-		std::cout << response.message() << std::endl;
 	}
 
 	std::cout << "Authorisation failed!" << std::endl;
 }
 
+bool Client::loginAndChat(std::string &login, std::string &password)
+{
+	LoginRequest request(this, login, password);
+	Response<User> response = _server->request(request);
+
+	if(response.success())
+	{
+		_user = response.data();
+		std::cout << "Welcom to the chat, " << _user->login() << "!" << std::endl;
+		chat();
+		return true;
+	}
+
+	return false;
+}
+
 void Client::registerUser()
 {
-	std::string fullName, login, password1, password2;
-
 	std::cout << "Enter your full name: ";
-	std::cin >> fullName;
-	std::cout << "Enter your login: ";
-	std::cin >> login;
+	std::string fullName;
+	ignore();
+	std::getline(std::cin, fullName);
+	std::string login;
+	do
+	{
+		std::cout << "Enter your login (can not contain '@', ':' or any space characters): ";
+		std::getline(std::cin, login);
+	}while(!isLogin(login));
+
+	std::string password1, password2;
 
 	do
 	{
 		//TODO: Разобраться, как скрыть ввод.
 		std::cout << "Enter password: ";
-		std::cin >> password1;
+		std::getline(std::cin, password1);
 		std::cout << "Repeat password: ";
-		std::cin >> password2;
+		std::getline(std::cin, password2);
 	}
 	while(password1 != password2);
 
@@ -101,6 +147,7 @@ void Client::registerUser()
 	if(response.success())
 	{
 		std::cout << "You are signed up successfully." << std::endl;
+		loginAndChat(login, password1);
 	}
 	else
 	{
@@ -123,14 +170,15 @@ void Client::showMessages()noexcept
 
 			if(message)
 			{
-				std::cout << (message->from() == user() ? "Me:" : message->from()) << std::endl;
+				std::cout << std::endl;
+				std::cout << (message->from() == user() ? "Me:" : message->from() + ":") << std::endl;
 
 				if(message->to() != ALL)
 				{
 					std::cout << "@" << message->to() << ": ";
 				}
 
-				std::cout << message->msg() << std::endl;
+				std::cout << message->msg() << std::endl << std::endl;
 			}
 			else
 			{

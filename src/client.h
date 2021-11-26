@@ -17,6 +17,7 @@ class Client final
 
 	void chat();
 	void login();
+	bool loginAndChat(std::string&, std::string&);
 	void logout() noexcept;
 	void registerUser();
 	void showMessages()noexcept;

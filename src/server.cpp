@@ -93,7 +93,7 @@ Message *Server::message(std::string login)
 
 Response<void> Server::request(RegistrationRequest &request)noexcept
 {
-	if(hasUser(request.login()))
+	if(hasUser(request.login()) || request.login() == ALL)
 	{
 		Response<void> response(false, "User " + request.login() + " already exists.");
 		return response;
