@@ -13,12 +13,14 @@ class Client final
 	private:
 	User *_user = nullptr;
 	Server *_server;
-	bool hasNewMessage = false;
+	bool _hasNewMessage = false;
 
-	void chat()const noexcept;
+	void chat();
 	void login();
+	bool loginAndChat(std::string&, std::string&);
 	void logout() noexcept;
 	void registerUser();
+	void showMessages()noexcept;
 
 	public:
 	Client(Server*) noexcept;
