@@ -162,7 +162,7 @@ void Client::showMessages()noexcept
 
 		if(response.success())
 		{
-			Message *message = response.data();
+			std::shared_ptr<Message> message = response.data();
 
 			if(message)
 			{
