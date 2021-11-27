@@ -217,7 +217,15 @@ void Client::start()
 
 std::shared_ptr<Client> Client::ptr()noexcept
 {
-	return shared_from_this();
+	try
+	{
+		return shared_from_this();
+	}
+	catch(std::bad_weak_ptr &error)
+	{
+		std::shared_ptr<Client> ptr(this);
+		return ptr;
+	}
 }
 
 void Client::request(NewMessageServerRequest &request)noexcept
