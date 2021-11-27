@@ -9,7 +9,7 @@
 #include "response.h"
 #include "user.h"
 
-class Client final
+class Client final: public std::enable_shared_from_this<Client>
 {
 	private:
 	User *_user = nullptr;
@@ -29,6 +29,7 @@ class Client final
 	Client(Client&&) = delete;
 
 	void start();
+	std::shared_ptr<Client> ptr()noexcept;
 
 	void request(NewMessageServerRequest&)noexcept;
 	std::string user()const noexcept;

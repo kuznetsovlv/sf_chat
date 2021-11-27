@@ -56,8 +56,8 @@ void Client::chat()
 
 		Message msg(message, user(), to);
 
-		SendMessageRequest request(this, msg);
-		Response<void> response = _server.get()->request(request);
+		SendMessageRequest request(ptr(), msg);
+		Response<void> response = _server->request(request);
 
 		if(!response.success())
 		{
@@ -68,8 +68,8 @@ void Client::chat()
 
 void Client::logout() noexcept
 {
-	LogoutRequest request(this);
-	std::cout << _server.get()->request(request).message() << std::endl;
+	LogoutRequest request(ptr());
+	std::cout << _server->request(request).message() << std::endl;
 	_user = nullptr;
 }
 
@@ -97,8 +97,8 @@ void Client::login()
 
 bool Client::loginAndChat(std::string &login, std::string &password)
 {
-	LoginRequest request(this, login, password);
-	Response<User> response = _server.get()->request(request);
+	LoginRequest request(ptr(), login, password);
+	Response<User> response = _server->request(request);
 
 	if(response.success())
 	{
@@ -136,9 +136,9 @@ void Client::registerUser()
 	}
 	while(password1 != password2);
 
-	RegistrationRequest request(this, login, fullName, password1);
+	RegistrationRequest request(ptr(), login, fullName, password1);
 
-	Response<void> response = _server.get()->request(request);
+	Response<void> response = _server->request(request);
 
 	if(response.success())
 	{
@@ -155,10 +155,10 @@ void Client::registerUser()
 
 void Client::showMessages()noexcept
 {
-	GetMessageRequest request(this);
+	GetMessageRequest request(ptr());
 	while(true)
 	{
-		Response<Message> response = _server.get()->request(request);
+		Response<Message> response = _server->request(request);
 
 		if(response.success())
 		{
@@ -213,6 +213,11 @@ void Client::start()
 	} while(comand != 'q' && comand != 'Q');
 
 	std::cout << "Bye!" << std::endl;
+}
+
+std::shared_ptr<Client> Client::ptr()noexcept
+{
+	return shared_from_this();
 }
 
 void Client::request(NewMessageServerRequest &request)noexcept

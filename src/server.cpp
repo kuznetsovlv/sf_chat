@@ -38,7 +38,7 @@ void Server::saveMessage(Message message)
 
 	for(unsigned i = 0; i < _clients.size(); ++i)
 	{
-		Client *client = _clients[i];
+		std::shared_ptr<Client> client = _clients[i];
 
 		if(message.to() == ALL || message.to() == client->user())
 		{
@@ -47,12 +47,12 @@ void Server::saveMessage(Message message)
 	}
 }
 
-void Server::subscribe(Client *client)
+void Server::subscribe(std::shared_ptr<Client> client)
 {
 	_clients.push_back(client);
 }
 
-void Server::unsubscribe(Client *client)
+void Server::unsubscribe(std::shared_ptr<Client> client)
 {
 	for(unsigned i = 0; i < _clients.size(); ++i)
 	{
@@ -64,7 +64,7 @@ void Server::unsubscribe(Client *client)
 	}
 }
 
-bool Server::subscribed(Client *client)const noexcept
+bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 {
 	for(unsigned i = 0; i < _clients.size(); ++i)
 	{

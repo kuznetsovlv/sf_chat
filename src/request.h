@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <string>
 #include "message.h"
 
@@ -7,15 +8,15 @@ class Client;
 class Request
 {
 	private:
-	Client *_client;
+	const std::shared_ptr<Client> _client;
 
 	public:
-	Request(Client*)noexcept;
+	Request(const std::shared_ptr<Client>)noexcept;
 	Request(Request&) = delete;
 	Request(Request&&) = delete;
 	virtual ~Request() = 0;
 
-	virtual Client *client()const noexcept final;
+	virtual const std::shared_ptr<Client> &client()const noexcept final;
 
 	Request &operator=(Request&) = delete;
 	Request &&operator=(Request&&) = delete;
@@ -29,7 +30,7 @@ class RegistrationRequest final: public Request
 	std::string _password;
 
 	public:
-	RegistrationRequest(Client*,std::string,std::string,std::string)noexcept;
+	RegistrationRequest(const std::shared_ptr<Client>,std::string,std::string,std::string)noexcept;
 	RegistrationRequest(RegistrationRequest&) = delete;
 	RegistrationRequest(RegistrationRequest&&) = delete;
 
@@ -48,7 +49,7 @@ class LoginRequest final: public Request
 	std::string _password;
 
 	public:
-	LoginRequest(Client*,std::string,std::string)noexcept;
+	LoginRequest(const std::shared_ptr<Client>,std::string,std::string)noexcept;
 	LoginRequest(LoginRequest&) = delete;
 	LoginRequest(LoginRequest&&) = delete;
 
@@ -62,7 +63,7 @@ class LoginRequest final: public Request
 class LogoutRequest final: public Request
 {
 	public:
-	LogoutRequest(Client*)noexcept;
+	LogoutRequest(const std::shared_ptr<Client>)noexcept;
 };
 
 class SendMessageRequest final: public Request
@@ -71,7 +72,7 @@ class SendMessageRequest final: public Request
 	Message &_message;
 
 	public:
-	SendMessageRequest(Client*,Message&)noexcept;
+	SendMessageRequest(const std::shared_ptr<Client>,Message&)noexcept;
 	SendMessageRequest(SendMessageRequest&) = delete;
 	SendMessageRequest(SendMessageRequest&&) = delete;
 
@@ -84,7 +85,7 @@ class SendMessageRequest final: public Request
 class GetMessageRequest final: public Request
 {
 	public:
-	GetMessageRequest(Client*)noexcept;
+	GetMessageRequest(const std::shared_ptr<Client>)noexcept;
 	GetMessageRequest(GetMessageRequest&) = delete;
 	GetMessageRequest(GetMessageRequest&&) = delete;
 
