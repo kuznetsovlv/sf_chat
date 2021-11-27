@@ -6,17 +6,17 @@ Message::Message(const std::string msg, const std::string from, const std::strin
 {
 }
 
-std::string Message::from()const noexcept
+const std::string &Message::from()const noexcept
 {
 	return _from;
 }
 
-std::string Message::to()const noexcept
+const std::string &Message::to()const noexcept
 {
 	return _to;
 }
 
-std::string Message::msg()const noexcept
+const std::string &Message::msg()const noexcept
 {
 	return _msg;
 }
