@@ -25,18 +25,18 @@ class Request
 class RegistrationRequest final: public Request
 {
 	private:
-	std::string _login;
-	std::string _fullName;
-	std::string _password;
+	const std::string _login;
+	const std::string _fullName;
+	const std::string _password;
 
 	public:
-	RegistrationRequest(const std::shared_ptr<Client>,std::string,std::string,std::string)noexcept;
+	RegistrationRequest(const std::shared_ptr<Client>,const std::string,const std::string,const std::string)noexcept;
 	RegistrationRequest(RegistrationRequest&) = delete;
 	RegistrationRequest(RegistrationRequest&&) = delete;
 
-	std::string login()const noexcept;
-	std::string fullName()const noexcept;
-	std::string password()const noexcept;
+	const std::string &login()const noexcept;
+	const std::string &fullName()const noexcept;
+	const std::string &password()const noexcept;
 
 	RegistrationRequest &operator=(RegistrationRequest&) = delete;
 	RegistrationRequest &&operator=(RegistrationRequest&&) = delete;
@@ -45,16 +45,16 @@ class RegistrationRequest final: public Request
 class LoginRequest final: public Request
 {
 	private:
-	std::string _login;
-	std::string _password;
+	const std::string _login;
+	const std::string _password;
 
 	public:
-	LoginRequest(const std::shared_ptr<Client>,std::string,std::string)noexcept;
+	LoginRequest(const std::shared_ptr<Client>,const std::string,const std::string)noexcept;
 	LoginRequest(LoginRequest&) = delete;
 	LoginRequest(LoginRequest&&) = delete;
 
-	std::string login()const noexcept;
-	std::string password()const noexcept;
+	const std::string &login()const noexcept;
+	const std::string &password()const noexcept;
 
 	LoginRequest &operator=(LoginRequest&) = delete;
 	LoginRequest &&operator=(LoginRequest&&) = delete;
@@ -69,14 +69,14 @@ class LogoutRequest final: public Request
 class SendMessageRequest final: public Request
 {
 	private:
-	Message &_message;
+	const Message &_message;
 
 	public:
-	SendMessageRequest(const std::shared_ptr<Client>,Message&)noexcept;
+	SendMessageRequest(const std::shared_ptr<Client>,const Message&)noexcept;
 	SendMessageRequest(SendMessageRequest&) = delete;
 	SendMessageRequest(SendMessageRequest&&) = delete;
 
-	Message &message()const noexcept;
+	const Message &message()const noexcept;
 
 	SendMessageRequest &operator=(SendMessageRequest&) = delete;
 	SendMessageRequest &&operator=(SendMessageRequest&&) = delete;
