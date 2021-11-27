@@ -13,7 +13,7 @@ class Client final
 {
 	private:
 	User *_user = nullptr;
-	std::shared_ptr<Server> _server;
+	const std::shared_ptr<Server> _server;
 	bool _hasNewMessage = false;
 
 	void chat();
