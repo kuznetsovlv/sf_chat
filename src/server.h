@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <string>
 #include <map>
 #include <vector>
@@ -8,7 +9,7 @@
 
 class Client;
 class User;
-class Server final
+class Server final:public std::enable_shared_from_this<Server>
 {
 	private:
 	std::map<std::string, User*> _users;
@@ -31,6 +32,8 @@ class Server final
 	Server(Server&&) = delete;
 	~Server();
 
+	std::shared_ptr<Server> ptr()noexcept;
+
 	Response<void> request(RegistrationRequest&)noexcept;
 	Response<User> request(LoginRequest&)noexcept;
 	Response<void> request(LogoutRequest&)noexcept;
@@ -40,9 +43,7 @@ class Server final
 	Server &operator=(Server&) = delete;
 	Server &&operator=(Server&&) = delete;
 
-	friend Server* getServer();
+	friend std::shared_ptr<Server> getServer();
 };
 
-Server *getServer();
-
-void deleteServer();
+std::shared_ptr<Server> getServer();

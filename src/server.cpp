@@ -1,3 +1,4 @@
+#include <memory>
 #include <string>
 #include <map>
 #include <vector>
@@ -6,8 +7,6 @@
 #include "serverRequest.h"
 #include "message.h"
 #include "user.h"
-
-Server *server = nullptr;
 
 Server::Server()
 {
@@ -89,6 +88,11 @@ Message *Server::message(std::string login)
 		}
 	}
 	return nullptr;
+}
+
+std::shared_ptr<Server> Server::ptr()noexcept
+{
+	return shared_from_this();
 }
 
 Response<void> Server::request(RegistrationRequest &request)noexcept
@@ -197,20 +201,8 @@ Response<Message> Server::request(GetMessageRequest &request)noexcept
 	return response;
 }
 
-Server *getServer()
+std::shared_ptr<Server> getServer()
 {
-	if(!server)
-	{
-		server = new Server();
-	}
-
+	static std::shared_ptr<Server> server(new Server());
 	return server;
-}
-
-void deleteServer() {
-	if(server)
-	{
-		delete server;
-		server = nullptr;
-	}
 }

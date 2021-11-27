@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <string>
 #include <vector>
 #include "message.h"
@@ -12,7 +13,7 @@ class Client final
 {
 	private:
 	User *_user = nullptr;
-	Server *_server;
+	std::shared_ptr<Server> _server;
 	bool _hasNewMessage = false;
 
 	void chat();
@@ -23,10 +24,9 @@ class Client final
 	void showMessages()noexcept;
 
 	public:
-	Client(Server*) noexcept;
+	Client(std::shared_ptr<Server>) noexcept;
 	Client(Client&) = delete;
 	Client(Client&&) = delete;
-	~Client()noexcept;
 
 	void start();
 

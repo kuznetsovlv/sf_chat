@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <string>
 #include "client.h"
 #include "input.h"
@@ -7,13 +8,8 @@
 #include "request.h"
 #include "response.h"
 
-Client::Client(Server *server)noexcept:_server(server)
+Client::Client(std::shared_ptr<Server> server)noexcept:_server(server)
 {
-}
-
-Client::~Client()noexcept
-{
-	deleteServer();
 }
 
 void Client::chat()
@@ -61,7 +57,7 @@ void Client::chat()
 		Message msg(message, user(), to);
 
 		SendMessageRequest request(this, msg);
-		Response<void> response = _server->request(request);
+		Response<void> response = _server.get()->request(request);
 
 		if(!response.success())
 		{
@@ -73,7 +69,7 @@ void Client::chat()
 void Client::logout() noexcept
 {
 	LogoutRequest request(this);
-	std::cout << _server->request(request).message() << std::endl;
+	std::cout << _server.get()->request(request).message() << std::endl;
 	_user = nullptr;
 }
 
@@ -102,7 +98,7 @@ void Client::login()
 bool Client::loginAndChat(std::string &login, std::string &password)
 {
 	LoginRequest request(this, login, password);
-	Response<User> response = _server->request(request);
+	Response<User> response = _server.get()->request(request);
 
 	if(response.success())
 	{
@@ -142,7 +138,7 @@ void Client::registerUser()
 
 	RegistrationRequest request(this, login, fullName, password1);
 
-	Response<void> response = _server->request(request);
+	Response<void> response = _server.get()->request(request);
 
 	if(response.success())
 	{
@@ -162,7 +158,7 @@ void Client::showMessages()noexcept
 	GetMessageRequest request(this);
 	while(true)
 	{
-		Response<Message> response = _server->request(request);
+		Response<Message> response = _server.get()->request(request);
 
 		if(response.success())
 		{
