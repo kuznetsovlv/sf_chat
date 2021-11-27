@@ -7,7 +7,7 @@ extern const std::string ALL;
 class User final
 {
 	private:
-	std::string _login;
+	const std::string _login;
 	std::string _fullName;
 	std::string _password;
 

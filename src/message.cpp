@@ -2,7 +2,7 @@
 #include "message.h"
 #include "user.h"
 
-Message::Message(std::string msg, std::string from, std::string to = ALL)noexcept:_msg(msg),_from(from),_to(to)
+Message::Message(const std::string msg, const std::string from, const std::string to = ALL)noexcept:_msg(msg),_from(from),_to(to)
 {
 }
 
