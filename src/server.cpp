@@ -31,10 +31,8 @@ void Server::saveMessage(const Message message)
 	_messages.push_back(message);
 	NewMessageServerRequest request;
 
-	for(unsigned i = 0; i < _clients.size(); ++i)
+	for(auto client: _clients)
 	{
-		std::shared_ptr<Client> client = _clients[i];
-
 		if(message.to() == ALL || message.to() == client->user())
 		{
 			client->request(request);
@@ -49,9 +47,9 @@ void Server::subscribe(const std::shared_ptr<Client> client)
 
 void Server::unsubscribe(const std::shared_ptr<Client> client)
 {
-	for(unsigned i = 0; i < _clients.size(); ++i)
+	for(size_t i = 0; i < _clients.size(); ++i)
 	{
-		if(_clients[i] == client)
+		if(_clients[i].get() == client.get())
 		{
 			_clients.erase(_clients.begin() + i);
 			return;
@@ -61,9 +59,9 @@ void Server::unsubscribe(const std::shared_ptr<Client> client)
 
 bool Server::subscribed(const std::shared_ptr<Client> client)const noexcept
 {
-	for(unsigned i = 0; i < _clients.size(); ++i)
+	for(auto c: _clients)
 	{
-		if(_clients[i] == client)
+		if(c.get() == client.get())
 		{
 			return true;
 		}
@@ -73,16 +71,20 @@ bool Server::subscribed(const std::shared_ptr<Client> client)const noexcept
 
 std::shared_ptr<Message> Server::message(const std::string login)
 {
-	for(int i = _lastSent[login] + 1; i < _messages.size(); ++i)
+	int counter = -1;
+	for(Message &message: _messages)
 	{
-		Message message = _messages[i];
 		if(message.to() == ALL || message.to() == login)
 		{
-			_lastSent[login] = i;
-			return std::shared_ptr<Message>(&_messages[i]);
+			++counter;
+			if(counter > _lastSent[login])
+			{
+				++_lastSent[login];
+				return std::shared_ptr<Message>(&message);
+			}
 		}
 	}
-	return nullptr;
+	return std::shared_ptr<Message>(new Message());
 }
 
 std::shared_ptr<Server> Server::ptr()noexcept

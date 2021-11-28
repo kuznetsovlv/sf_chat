@@ -164,7 +164,7 @@ void Client::showMessages()noexcept
 		{
 			std::shared_ptr<Message> message = response.data();
 
-			if(message)
+			if(!message->empty())
 			{
 				std::cout << std::endl;
 				std::cout << (message->from() == user() ? "Me:" : message->from() + ":") << std::endl;
