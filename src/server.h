@@ -12,7 +12,7 @@ class User;
 class Server final:public std::enable_shared_from_this<Server>
 {
 	private:
-	std::map<std::string, std::shared_ptr<User>> _users;
+	std::map<std::string, User*> _users;
 	std::map<std::string, int> _lastSent;
 	std::vector<Message> _messages;
 	std::vector<std::shared_ptr<Client>> _clients;
@@ -25,11 +25,12 @@ class Server final:public std::enable_shared_from_this<Server>
 	void subscribe(std::shared_ptr<Client>);
 	void unsubscribe(std::shared_ptr<Client>);
 	bool subscribed(std::shared_ptr<Client> )const noexcept;
-	std::shared_ptr<Message> message(std::string);
+	Message *message(std::string);
 
 	public:
 	Server(Server&) = delete;
 	Server(Server&&) = delete;
+	~Server();
 
 	std::shared_ptr<Server> ptr()noexcept;
 

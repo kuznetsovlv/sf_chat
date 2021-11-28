@@ -10,8 +10,14 @@
 
 Server::Server()
 {
-	std::shared_ptr<User> all(new User());
-	_users[ALL] = all;
+	_users[ALL] = new User();
+}
+
+Server::~Server() {
+	for(auto iter = _users.begin(); iter != _users.end(); ++iter)
+	{
+		delete iter->second;
+	}
 }
 
 bool Server::hasUser(std::string login)const noexcept
@@ -21,8 +27,7 @@ bool Server::hasUser(std::string login)const noexcept
 
 void Server::createUser(std::string login, std::string fullName, std::string password)
 {
-	std::shared_ptr<User> user(new User(login, fullName, password));
-	_users[login] = user;
+	_users[login] = new User(login, fullName, password);
 	_lastSent[login] = -1;
 }
 
@@ -71,7 +76,7 @@ bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 	return false;
 }
 
-std::shared_ptr<Message> Server::message(std::string login)
+Message *Server::message(std::string login)
 {
 	for(int i = _lastSent[login] + 1; i < _messages.size(); ++i)
 	{
@@ -79,7 +84,7 @@ std::shared_ptr<Message> Server::message(std::string login)
 		if(message.to() == ALL || message.to() == login)
 		{
 			_lastSent[login] = i;
-			return std::shared_ptr<Message>(&_messages[i]);
+			return &_messages[i];
 		}
 	}
 	return nullptr;
@@ -116,7 +121,7 @@ Response<User> Server::request(LoginRequest &request)noexcept
 {
 	if(hasUser(request.login()))
 	{
-		std::shared_ptr<User> user = _users[request.login()];
+		User *user = _users[request.login()];
 
 		if(user->password() == request.password())
 		{
