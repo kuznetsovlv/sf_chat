@@ -19,13 +19,13 @@ class Server final:public std::enable_shared_from_this<Server>
 
 	Server();
 
-	bool hasUser(const std::string)const noexcept;
-	void createUser(const std::string, const std::string, const std::string);
-	void saveMessage(const Message);
-	void subscribe(const std::shared_ptr<Client>);
-	void unsubscribe(const std::shared_ptr<Client>);
-	bool subscribed(const std::shared_ptr<Client> )const noexcept;
-	std::shared_ptr<Message> message(const std::string);
+	bool hasUser(std::string)const noexcept;
+	void createUser(std::string, std::string, std::string);
+	void saveMessage(Message);
+	void subscribe(std::shared_ptr<Client>);
+	void unsubscribe(std::shared_ptr<Client>);
+	bool subscribed(std::shared_ptr<Client> )const noexcept;
+	std::shared_ptr<Message> message(std::string);
 
 	public:
 	Server(Server&) = delete;
@@ -33,11 +33,11 @@ class Server final:public std::enable_shared_from_this<Server>
 
 	std::shared_ptr<Server> ptr()noexcept;
 
-	Response<void> request(const RegistrationRequest&)noexcept;
-	Response<User> request(const LoginRequest&)noexcept;
-	Response<void> request(const LogoutRequest&)noexcept;
-	Response<void> request(const SendMessageRequest&)noexcept;
-	Response<Message> request(const GetMessageRequest&)noexcept;
+	Response<void> request(RegistrationRequest&)noexcept;
+	Response<User> request(LoginRequest&)noexcept;
+	Response<void> request(LogoutRequest&)noexcept;
+	Response<void> request(SendMessageRequest&)noexcept;
+	Response<Message> request(GetMessageRequest&)noexcept;
 
 	Server &operator=(Server&) = delete;
 	Server &&operator=(Server&&) = delete;

@@ -14,19 +14,19 @@ Server::Server()
 	_users[ALL] = all;
 }
 
-bool Server::hasUser(const std::string login)const noexcept
+bool Server::hasUser(std::string login)const noexcept
 {
 	return _users.find(login) != _users.end();
 }
 
-void Server::createUser(const std::string login, const std::string fullName, const std::string password)
+void Server::createUser(std::string login, std::string fullName, std::string password)
 {
 	std::shared_ptr<User> user(new User(login, fullName, password));
 	_users[login] = user;
 	_lastSent[login] = -1;
 }
 
-void Server::saveMessage(const Message message)
+void Server::saveMessage(Message message)
 {
 	_messages.push_back(message);
 	NewMessageServerRequest request;
@@ -42,12 +42,12 @@ void Server::saveMessage(const Message message)
 	}
 }
 
-void Server::subscribe(const std::shared_ptr<Client> client)
+void Server::subscribe(std::shared_ptr<Client> client)
 {
 	_clients.push_back(client);
 }
 
-void Server::unsubscribe(const std::shared_ptr<Client> client)
+void Server::unsubscribe(std::shared_ptr<Client> client)
 {
 	for(unsigned i = 0; i < _clients.size(); ++i)
 	{
@@ -59,7 +59,7 @@ void Server::unsubscribe(const std::shared_ptr<Client> client)
 	}
 }
 
-bool Server::subscribed(const std::shared_ptr<Client> client)const noexcept
+bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 {
 	for(unsigned i = 0; i < _clients.size(); ++i)
 	{
@@ -71,7 +71,7 @@ bool Server::subscribed(const std::shared_ptr<Client> client)const noexcept
 	return false;
 }
 
-std::shared_ptr<Message> Server::message(const std::string login)
+std::shared_ptr<Message> Server::message(std::string login)
 {
 	for(int i = _lastSent[login] + 1; i < _messages.size(); ++i)
 	{
@@ -90,7 +90,7 @@ std::shared_ptr<Server> Server::ptr()noexcept
 	return shared_from_this();
 }
 
-Response<void> Server::request(const RegistrationRequest &request)noexcept
+Response<void> Server::request(RegistrationRequest &request)noexcept
 {
 	if(hasUser(request.login()) || request.login() == ALL)
 	{
@@ -112,7 +112,7 @@ Response<void> Server::request(const RegistrationRequest &request)noexcept
 	return response;
 }
 
-Response<User> Server::request(const LoginRequest &request)noexcept
+Response<User> Server::request(LoginRequest &request)noexcept
 {
 	if(hasUser(request.login()))
 	{
@@ -138,7 +138,7 @@ Response<User> Server::request(const LoginRequest &request)noexcept
 	return response;
 }
 
-Response<void> Server::request(const LogoutRequest &request)noexcept
+Response<void> Server::request(LogoutRequest &request)noexcept
 {
 	try
 	{
@@ -154,7 +154,7 @@ Response<void> Server::request(const LogoutRequest &request)noexcept
 	return response;
 }
 
-Response<void> Server::request(const SendMessageRequest &request)noexcept
+Response<void> Server::request(SendMessageRequest &request)noexcept
 {
 	try
 	{
@@ -170,7 +170,7 @@ Response<void> Server::request(const SendMessageRequest &request)noexcept
 	return response;
 }
 
-Response<Message> Server::request(const GetMessageRequest &request)noexcept
+Response<Message> Server::request(GetMessageRequest &request)noexcept
 {
 	if(subscribed(request.client()))
 	{
