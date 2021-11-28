@@ -2,11 +2,7 @@
 #include "message.h"
 #include "user.h"
 
-Message::Message()noexcept:_msg(""),_from(""),_to(""),_empty(true)
-{
-}
-
-Message::Message(const std::string msg, const std::string from, const std::string to = ALL)noexcept:_msg(msg),_from(from),_to(to),_empty(false)
+Message::Message(const std::string msg, const std::string from, const std::string to = ALL)noexcept:_msg(msg),_from(from),_to(to)
 {
 }
 
@@ -23,9 +19,4 @@ const std::string &Message::to()const noexcept
 const std::string &Message::msg()const noexcept
 {
 	return _msg;
-}
-
-bool Message::empty()const noexcept
-{
-	return _empty;
 }
