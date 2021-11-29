@@ -14,7 +14,7 @@ class Server final:public std::enable_shared_from_this<Server>
 {
 	private:
 	std::map<std::string, std::shared_ptr<User>> _users;
-	std::map<std::string, int> _lastSent;
+	std::map<std::string, size_t> _sent;
 	std::vector<Message> _messages;
 	std::vector<std::shared_ptr<Client>> _clients;
 
@@ -31,8 +31,6 @@ class Server final:public std::enable_shared_from_this<Server>
 	public:
 	Server(Server&) = delete;
 	Server(Server&&) = delete;
-
-	std::shared_ptr<Server> ptr()noexcept;
 
 	Response request(RegistrationRequest&)noexcept;
 	DataResponse<std::shared_ptr<User>> request(LoginRequest&)noexcept;

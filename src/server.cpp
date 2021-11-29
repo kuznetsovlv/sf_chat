@@ -1,3 +1,4 @@
+#include <exception>
 #include <memory>
 #include <string>
 #include <map>
@@ -26,7 +27,7 @@ void Server::createUser(std::string login, std::string fullName, std::string pas
 {
 	std::shared_ptr<User> user(new User(login, fullName, password));
 	_users[login] = user;
-	_lastSent[login] = -1;
+	_sent[login] = 0;
 }
 
 void Server::saveMessage(Message message)
@@ -34,10 +35,8 @@ void Server::saveMessage(Message message)
 	_messages.push_back(message);
 	NewMessageServerRequest request;
 
-	for(unsigned i = 0; i < _clients.size(); ++i)
+	for(auto client: _clients)
 	{
-		std::shared_ptr<Client> client = _clients[i];
-
 		if(message.to() == ALL || message.to() == client->user())
 		{
 			client->request(request);
@@ -52,9 +51,9 @@ void Server::subscribe(std::shared_ptr<Client> client)
 
 void Server::unsubscribe(std::shared_ptr<Client> client)
 {
-	for(unsigned i = 0; i < _clients.size(); ++i)
+	for(size_t i = 0; i < _clients.size(); ++i)
 	{
-		if(_clients[i] == client)
+		if(_clients[i].get() == client.get())
 		{
 			_clients.erase(_clients.begin() + i);
 			return;
@@ -64,9 +63,9 @@ void Server::unsubscribe(std::shared_ptr<Client> client)
 
 bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 {
-	for(unsigned i = 0; i < _clients.size(); ++i)
+	for(auto c: _clients)
 	{
-		if(_clients[i] == client)
+		if(c.get() == client.get())
 		{
 			return true;
 		}
@@ -76,21 +75,21 @@ bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 
 const Message &Server::message(std::string login)
 {
-	for(int i = _lastSent[login] + 1; i < _messages.size(); ++i)
+	size_t count = 0;
+	for(size_t i = 0; i < _messages.size(); ++i)
 	{
 		Message message = _messages[i];
 		if(message.to() == ALL || message.to() == login)
 		{
-			_lastSent[login] = i;
-			return _messages[i];
+			++count;
+			if (count > _sent[login])
+			{
+				++_sent[login];
+				return _messages[i];
+			}
 		}
 	}
 	return emptyMessage;
-}
-
-std::shared_ptr<Server> Server::ptr()noexcept
-{
-	return shared_from_this();
 }
 
 Response Server::request(RegistrationRequest &request)noexcept
@@ -105,9 +104,9 @@ Response Server::request(RegistrationRequest &request)noexcept
 	{
 		createUser(request.login(), request.fullName(), request.password());
 	}
-	catch(...)
+	catch(std::exception &error)
 	{
-		Response response(false, "Can not ctreate user " + request.login() + ". Unknown error.");
+		Response response(false, "Can not ctreate user " + request.login() + ": " + std::string(error.what()));
 		return response;
 	}
 
@@ -129,9 +128,9 @@ DataResponse<std::shared_ptr<User>> Server::request(LoginRequest &request)noexce
 				DataResponse<std::shared_ptr<User>> response(true, "Ok", user);
 				return response;
 			}
-			catch(...)
+			catch(std::exception &error)
 			{
-				DataResponse<std::shared_ptr<User>> response(false, "Unknown error.", nullptr);
+				DataResponse<std::shared_ptr<User>> response("Can not login: " + std::string(error.what()));
 				return response;
 			}
 		}
@@ -147,9 +146,9 @@ Response Server::request(LogoutRequest &request)noexcept
 	{
 		unsubscribe(request.client());
 	}
-	catch(...)
+	catch(std::exception &error)
 	{
-		Response response(false, "Unknown error");
+		Response response(false, error.what());
 		return response;
 	}
 
@@ -163,9 +162,9 @@ Response Server::request(SendMessageRequest &request)noexcept
 	{
 		saveMessage(request.message());
 	}
-	catch(...)
+	catch(std::exception &error)
 	{
-		Response response(false, "Unknown error");
+		Response response(false, "Can not send message: " + std::string(error.what()));
 		return response;
 	}
 
@@ -184,18 +183,18 @@ DataResponse<Message> Server::request(GetMessageRequest &request)noexcept
 				DataResponse<Message> response(true, "Ok", message(request.client()->user()));
 				return response;
 			}
-			catch(...)
+			catch(std::exception &error)
 			{
-				DataResponse<Message> response(false, "Unknown error", emptyMessage);
+				DataResponse<Message> response(false, "Can not get message: " + std::string(error.what()), emptyMessage);
 				return response;
 			}
 		}
 
-		DataResponse<Message> response(false, "Unknown user", emptyMessage);
+		DataResponse<Message> response(false, "Can not get message: unknown user", emptyMessage);
 		return response;
 	}
 
-	DataResponse<Message> response(false, "Unsubscribed", emptyMessage);
+	DataResponse<Message> response(false, "Can not get message: unsubscribed", emptyMessage);
 	return response;
 }
 

@@ -9,6 +9,7 @@ class DataResponse final: public Response
 	const T _data;
 
 	public:
+	DataResponse(std::string)noexcept;
 	DataResponse(bool,std::string,T)noexcept;
 
 	const T &data()const noexcept;

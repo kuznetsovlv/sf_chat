@@ -2,6 +2,11 @@
 #include "dataResponse.h"
 
 template<class T>
+DataResponse<T>::DataResponse(std::string message)noexcept:Response(false, message)
+{
+}
+
+template<class T>
 DataResponse<T>::DataResponse(bool success, std::string message, T data)noexcept:Response(success, message),_data(data)
 {
 }
