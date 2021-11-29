@@ -10,7 +10,7 @@
 class Client final: public std::enable_shared_from_this<Client>
 {
 	private:
-	std::shared_ptr<User> _user = nullptr;
+	std::shared_ptr<User> _user;
 	const std::shared_ptr<Server> _server;
 	bool _hasNewMessage = false;
 

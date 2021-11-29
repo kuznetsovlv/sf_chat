@@ -8,8 +8,11 @@
 #include "request.h"
 #include "response.h"
 
+const std::string emptyStr;
+
 Client::Client(std::shared_ptr<Server> server)noexcept:_server(server)
 {
+	_user.reset();
 }
 
 void Client::chat()
@@ -70,7 +73,7 @@ void Client::logout() noexcept
 {
 	LogoutRequest request(ptr());
 	std::cout << _server->request(request).message() << std::endl;
-	_user = nullptr;
+	_user.reset();
 }
 
 void Client::login()
@@ -235,5 +238,5 @@ void Client::request(NewMessageServerRequest &request)noexcept
 
 const std::string &Client::user()const noexcept
 {
-	return _user->login();
+	return _user && _user.get() ? _user->login() : emptyStr;
 }
