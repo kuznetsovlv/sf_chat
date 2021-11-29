@@ -33,6 +33,7 @@ void Client::chat()
 
 		if(message == "!quit")
 		{
+			logout();
 			return;
 		}
 
