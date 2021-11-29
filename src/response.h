@@ -1,28 +1,15 @@
 #pragma once
 #include <string>
 
-template <class T>
-class Response final
+class Response
 {
 	private:
-	bool _success;
-	std::string _message;
-	T *_data;
+	const bool _success;
+	const std::string _message;
 
 	public:
 	Response(bool,std::string)noexcept;
-	Response(bool,std::string, T*)noexcept;
-	Response(Response<T>&)noexcept;
-	Response(Response<T>&&)noexcept;
 
-	~Response() = default; //Память *_data может быть нужна после уничтожения объекта, удаляться она должна в другом месте
-
-	bool success()const noexcept;
-	std::string message()const noexcept;
-	T *data()const noexcept;
-
-	Response<T> &operator=(Response<T>&)noexcept;
-	Response<T> &&operator=(Response<T>&&)noexcept;
+	virtual bool success()const noexcept final ;
+	virtual const std::string &message()const noexcept final ;
 };
-
-#include "response.cpp"

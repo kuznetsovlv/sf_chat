@@ -3,21 +3,18 @@
 #include <map>
 #include <vector>
 #include "client.h"
+#include "dataResponse.h"
 #include "server.h"
 #include "serverRequest.h"
 #include "message.h"
 #include "user.h"
 
+const Message emptyMessage;
+
 Server::Server()
 {
-	_users[ALL] = new User();
-}
-
-Server::~Server() {
-	for(auto iter = _users.begin(); iter != _users.end(); ++iter)
-	{
-		delete iter->second;
-	}
+	std::shared_ptr<User> all(new User());
+	_users[ALL] = all;
 }
 
 bool Server::hasUser(std::string login)const noexcept
@@ -27,7 +24,8 @@ bool Server::hasUser(std::string login)const noexcept
 
 void Server::createUser(std::string login, std::string fullName, std::string password)
 {
-	_users[login] = new User(login, fullName, password);
+	std::shared_ptr<User> user(new User(login, fullName, password));
+	_users[login] = user;
 	_lastSent[login] = -1;
 }
 
@@ -76,7 +74,7 @@ bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 	return false;
 }
 
-Message *Server::message(std::string login)
+const Message &Server::message(std::string login)
 {
 	for(int i = _lastSent[login] + 1; i < _messages.size(); ++i)
 	{
@@ -84,10 +82,10 @@ Message *Server::message(std::string login)
 		if(message.to() == ALL || message.to() == login)
 		{
 			_lastSent[login] = i;
-			return &_messages[i];
+			return _messages[i];
 		}
 	}
-	return nullptr;
+	return emptyMessage;
 }
 
 std::shared_ptr<Server> Server::ptr()noexcept
@@ -95,11 +93,11 @@ std::shared_ptr<Server> Server::ptr()noexcept
 	return shared_from_this();
 }
 
-Response<void> Server::request(RegistrationRequest &request)noexcept
+Response Server::request(RegistrationRequest &request)noexcept
 {
 	if(hasUser(request.login()) || request.login() == ALL)
 	{
-		Response<void> response(false, "User " + request.login() + " already exists.");
+		Response response(false, "User " + request.login() + " already exists.");
 		return response;
 	}
 
@@ -109,41 +107,41 @@ Response<void> Server::request(RegistrationRequest &request)noexcept
 	}
 	catch(...)
 	{
-		Response<void> response(false, "Can not ctreate user " + request.login() + ". Unknown error.");
+		Response response(false, "Can not ctreate user " + request.login() + ". Unknown error.");
 		return response;
 	}
 
-	Response<void> response(true, "Ok");
+	Response response(true, "Ok");
 	return response;
 }
 
-Response<User> Server::request(LoginRequest &request)noexcept
+DataResponse<std::shared_ptr<User>> Server::request(LoginRequest &request)noexcept
 {
 	if(hasUser(request.login()))
 	{
-		User *user = _users[request.login()];
+		std::shared_ptr<User> user = _users[request.login()];
 
 		if(user->password() == request.password())
 		{
 			try
 			{
 				subscribe(request.client());
-				Response<User> response(true, "Ok", user);
+				DataResponse<std::shared_ptr<User>> response(true, "Ok", user);
 				return response;
 			}
 			catch(...)
 			{
-				Response<User> response(false, "Unknown error.");
+				DataResponse<std::shared_ptr<User>> response(false, "Unknown error.", nullptr);
 				return response;
 			}
 		}
 	}
 
-	Response<User> response(false, "Incorrect login or password");
+	DataResponse<std::shared_ptr<User>> response(false, "Incorrect login or password", nullptr);
 	return response;
 }
 
-Response<void> Server::request(LogoutRequest &request)noexcept
+Response Server::request(LogoutRequest &request)noexcept
 {
 	try
 	{
@@ -151,15 +149,15 @@ Response<void> Server::request(LogoutRequest &request)noexcept
 	}
 	catch(...)
 	{
-		Response<void> response(false, "Unknown error");
+		Response response(false, "Unknown error");
 		return response;
 	}
 
-	Response<void> response(true, "Ok");
+	Response response(true, "Ok");
 	return response;
 }
 
-Response<void> Server::request(SendMessageRequest &request)noexcept
+Response Server::request(SendMessageRequest &request)noexcept
 {
 	try
 	{
@@ -167,15 +165,15 @@ Response<void> Server::request(SendMessageRequest &request)noexcept
 	}
 	catch(...)
 	{
-		Response<void> response(false, "Unknown error");
+		Response response(false, "Unknown error");
 		return response;
 	}
 
-	Response<void> response(true, "Ok");
+	Response response(true, "Ok");
 	return response;
 }
 
-Response<Message> Server::request(GetMessageRequest &request)noexcept
+DataResponse<Message> Server::request(GetMessageRequest &request)noexcept
 {
 	if(subscribed(request.client()))
 	{
@@ -183,21 +181,21 @@ Response<Message> Server::request(GetMessageRequest &request)noexcept
 		{
 			try
 			{
-				Response<Message> response(true, "Ok", message(request.client()->user()));
+				DataResponse<Message> response(true, "Ok", message(request.client()->user()));
 				return response;
 			}
 			catch(...)
 			{
-				Response<Message> response(false, "Unknown error");
+				DataResponse<Message> response(false, "Unknown error", emptyMessage);
 				return response;
 			}
 		}
 
-		Response<Message> response(false, "Unknown user");
+		DataResponse<Message> response(false, "Unknown user", emptyMessage);
 		return response;
 	}
 
-	Response<Message> response(false, "Unsubscribed");
+	DataResponse<Message> response(false, "Unsubscribed", emptyMessage);
 	return response;
 }
 

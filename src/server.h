@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "dataResponse.h"
 #include "message.h"
 #include "response.h"
 #include "request.h"
@@ -12,7 +13,7 @@ class User;
 class Server final:public std::enable_shared_from_this<Server>
 {
 	private:
-	std::map<std::string, User*> _users;
+	std::map<std::string, std::shared_ptr<User>> _users;
 	std::map<std::string, int> _lastSent;
 	std::vector<Message> _messages;
 	std::vector<std::shared_ptr<Client>> _clients;
@@ -25,20 +26,19 @@ class Server final:public std::enable_shared_from_this<Server>
 	void subscribe(std::shared_ptr<Client>);
 	void unsubscribe(std::shared_ptr<Client>);
 	bool subscribed(std::shared_ptr<Client> )const noexcept;
-	Message *message(std::string);
+	const Message &message(std::string);
 
 	public:
 	Server(Server&) = delete;
 	Server(Server&&) = delete;
-	~Server();
 
 	std::shared_ptr<Server> ptr()noexcept;
 
-	Response<void> request(RegistrationRequest&)noexcept;
-	Response<User> request(LoginRequest&)noexcept;
-	Response<void> request(LogoutRequest&)noexcept;
-	Response<void> request(SendMessageRequest&)noexcept;
-	Response<Message> request(GetMessageRequest&)noexcept;
+	Response request(RegistrationRequest&)noexcept;
+	DataResponse<std::shared_ptr<User>> request(LoginRequest&)noexcept;
+	Response request(LogoutRequest&)noexcept;
+	Response request(SendMessageRequest&)noexcept;
+	DataResponse<Message> request(GetMessageRequest&)noexcept;
 
 	Server &operator=(Server&) = delete;
 	Server &&operator=(Server&&) = delete;

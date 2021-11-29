@@ -57,7 +57,7 @@ void Client::chat()
 		Message msg(message, user(), to);
 
 		SendMessageRequest request(ptr(), msg);
-		Response<void> response = _server->request(request);
+		Response response = _server->request(request);
 
 		if(!response.success())
 		{
@@ -98,7 +98,7 @@ void Client::login()
 bool Client::loginAndChat(std::string &login, std::string &password)
 {
 	LoginRequest request(ptr(), login, password);
-	Response<User> response = _server->request(request);
+	DataResponse<std::shared_ptr<User>> response = _server->request(request);
 
 	if(response.success())
 	{
@@ -138,7 +138,7 @@ void Client::registerUser()
 
 	RegistrationRequest request(ptr(), login, fullName, password1);
 
-	Response<void> response = _server->request(request);
+	Response response = _server->request(request);
 
 	if(response.success())
 	{
@@ -158,23 +158,23 @@ void Client::showMessages()noexcept
 	GetMessageRequest request(ptr());
 	while(true)
 	{
-		Response<Message> response = _server->request(request);
+		DataResponse<Message> response = _server->request(request);
 
 		if(response.success())
 		{
-			Message *message = response.data();
+			const Message &message = response.data();
 
-			if(message)
+			if(!message.empty())
 			{
 				std::cout << std::endl;
-				std::cout << (message->from() == user() ? "Me:" : message->from() + ":") << std::endl;
+				std::cout << (message.from() == user() ? "Me:" : message.from() + ":") << std::endl;
 
-				if(message->to() != ALL)
+				if(message.to() != ALL)
 				{
-					std::cout << "@" << message->to() << ": ";
+					std::cout << "@" << message.to() << ": ";
 				}
 
-				std::cout << message->msg() << std::endl << std::endl;
+				std::cout << message.msg() << std::endl << std::endl;
 			}
 			else
 			{
@@ -233,7 +233,7 @@ void Client::request(NewMessageServerRequest &request)noexcept
 	_hasNewMessage = true;
 }
 
-std::string Client::user()const noexcept
+const std::string &Client::user()const noexcept
 {
-	return _user ? _user->login() : "";
+	return _user->login();
 }

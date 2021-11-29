@@ -2,17 +2,15 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "message.h"
 #include "server.h"
 #include "serverRequest.h"
 #include "request.h"
-#include "response.h"
 #include "user.h"
 
 class Client final: public std::enable_shared_from_this<Client>
 {
 	private:
-	User *_user = nullptr;
+	std::shared_ptr<User> _user = nullptr;
 	const std::shared_ptr<Server> _server;
 	bool _hasNewMessage = false;
 
@@ -32,7 +30,7 @@ class Client final: public std::enable_shared_from_this<Client>
 	std::shared_ptr<Client> ptr()noexcept;
 
 	void request(NewMessageServerRequest&)noexcept;
-	std::string user()const noexcept;
+	const std::string &user()const noexcept;
 
 	Client &operator=(Client&) = delete;
 	Client &&operator=(Client&&) = delete;

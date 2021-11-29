@@ -18,9 +18,9 @@ class User final
 	User(User&) = delete;
 	User(User&&) = delete;
 
-	std::string login()const noexcept;
-	std::string fullName()const noexcept;
-	std::string password()const noexcept;
+	const std::string &login()const noexcept;
+	const std::string &fullName()const noexcept;
+	const std::string &password()const noexcept;
 
 	User &operator=(User&) = delete;
 	User &operator=(User&&) = delete;
