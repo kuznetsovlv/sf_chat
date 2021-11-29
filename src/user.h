@@ -1,10 +1,11 @@
 #pragma once
+#include <memory>
 #include <string>
 #include "server.h"
 
 extern const std::string ALL;
 
-class User final
+class User final: public std::enable_shared_from_this<User>
 {
 	private:
 	const std::string _login;
