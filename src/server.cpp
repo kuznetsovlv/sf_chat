@@ -14,23 +14,21 @@ const Message emptyMessage;
 
 Server::Server()
 {
-	std::shared_ptr<User> all(new User());
-	_users[ALL] = all;
+	_users[ALL] = std::make_shared<User>();
 }
 
-bool Server::hasUser(std::string login)const noexcept
+bool Server::hasUser(const std::string &login)const noexcept
 {
 	return _users.find(login) != _users.end();
 }
 
-void Server::createUser(std::string login, std::string fullName, std::string password)
+void Server::createUser(const std::string &login, const std::string &fullName, const std::string &password)
 {
-	std::shared_ptr<User> user(new User(login, fullName, password));
-	_users[login] = user;
+	_users[login] = std::make_shared<User>(login, fullName, password);
 	_sent[login] = 0;
 }
 
-void Server::saveMessage(Message message)
+void Server::saveMessage(const Message &message)
 {
 	_messages.push_back(message);
 	NewMessageServerRequest request;
@@ -73,7 +71,7 @@ bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 	return false;
 }
 
-const Message &Server::message(std::string login)
+const Message &Server::message(const std::string &login)
 {
 	size_t count = 0;
 	for(Message &message: _messages)
@@ -195,10 +193,4 @@ DataResponse<Message> Server::request(GetMessageRequest &request)noexcept
 
 	DataResponse<Message> response(false, "Can not get message: unsubscribed", emptyMessage);
 	return response;
-}
-
-std::shared_ptr<Server> getServer()
-{
-	static std::shared_ptr<Server> server(new Server());
-	return server;
 }

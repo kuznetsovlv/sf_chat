@@ -11,7 +11,7 @@ class Request
 	const std::shared_ptr<Client> _client;
 
 	public:
-	Request(const std::shared_ptr<Client>)noexcept;
+	Request(const std::shared_ptr<Client>&)noexcept;
 	Request(Request&) = delete;
 	Request(Request&&) = delete;
 	virtual ~Request() = 0;
@@ -30,7 +30,7 @@ class RegistrationRequest final: public Request
 	const std::string _password;
 
 	public:
-	RegistrationRequest(const std::shared_ptr<Client>,const std::string,const std::string,const std::string)noexcept;
+	RegistrationRequest(const std::shared_ptr<Client>&,const std::string&,const std::string&,const std::string&)noexcept;
 	RegistrationRequest(RegistrationRequest&) = delete;
 	RegistrationRequest(RegistrationRequest&&) = delete;
 
@@ -49,7 +49,7 @@ class LoginRequest final: public Request
 	const std::string _password;
 
 	public:
-	LoginRequest(const std::shared_ptr<Client>,const std::string,const std::string)noexcept;
+	LoginRequest(const std::shared_ptr<Client>&,const std::string&,const std::string&)noexcept;
 	LoginRequest(LoginRequest&) = delete;
 	LoginRequest(LoginRequest&&) = delete;
 
@@ -63,7 +63,7 @@ class LoginRequest final: public Request
 class LogoutRequest final: public Request
 {
 	public:
-	LogoutRequest(const std::shared_ptr<Client>)noexcept;
+	explicit LogoutRequest(const std::shared_ptr<Client>&)noexcept;
 };
 
 class SendMessageRequest final: public Request
@@ -72,7 +72,7 @@ class SendMessageRequest final: public Request
 	const Message &_message;
 
 	public:
-	SendMessageRequest(const std::shared_ptr<Client>,const Message&)noexcept;
+	SendMessageRequest(const std::shared_ptr<Client>&,const Message&)noexcept;
 	SendMessageRequest(SendMessageRequest&) = delete;
 	SendMessageRequest(SendMessageRequest&&) = delete;
 
@@ -85,7 +85,7 @@ class SendMessageRequest final: public Request
 class GetMessageRequest final: public Request
 {
 	public:
-	GetMessageRequest(const std::shared_ptr<Client>)noexcept;
+	explicit GetMessageRequest(const std::shared_ptr<Client>&)noexcept;
 	GetMessageRequest(GetMessageRequest&) = delete;
 	GetMessageRequest(GetMessageRequest&&) = delete;
 

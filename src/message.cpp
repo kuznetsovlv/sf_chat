@@ -6,7 +6,7 @@ Message::Message()noexcept:_empty(true)
 {
 }
 
-Message::Message(const std::string msg, const std::string from, const std::string to = ALL)noexcept:_msg(msg),_from(from),_to(to),_empty(false)
+Message::Message(const std::string &msg, const std::string &from, const std::string &to = ALL)noexcept:_msg(msg),_from(from),_to(to),_empty(false)
 {
 }
 

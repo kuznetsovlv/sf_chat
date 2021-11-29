@@ -7,9 +7,9 @@
 #include "message.h"
 #include "response.h"
 #include "request.h"
+#include "user.h"
 
 class Client;
-class User;
 class Server final:public std::enable_shared_from_this<Server>
 {
 	private:
@@ -18,17 +18,16 @@ class Server final:public std::enable_shared_from_this<Server>
 	std::vector<Message> _messages;
 	std::vector<std::shared_ptr<Client>> _clients;
 
-	Server();
-
-	bool hasUser(std::string)const noexcept;
-	void createUser(std::string, std::string, std::string);
-	void saveMessage(Message);
+	bool hasUser(const std::string&)const noexcept;
+	void createUser(const std::string&, const std::string&, const std::string&);
+	void saveMessage(const Message&);
 	void subscribe(std::shared_ptr<Client>);
 	void unsubscribe(std::shared_ptr<Client>);
 	bool subscribed(std::shared_ptr<Client> )const noexcept;
-	const Message &message(std::string);
+	const Message &message(const std::string&);
 
 	public:
+	Server();
 	Server(Server&) = delete;
 	Server(Server&&) = delete;
 
@@ -41,7 +40,4 @@ class Server final:public std::enable_shared_from_this<Server>
 	Server &operator=(Server&) = delete;
 	Server &&operator=(Server&&) = delete;
 
-	friend std::shared_ptr<Server> getServer();
 };
-
-std::shared_ptr<Server> getServer();

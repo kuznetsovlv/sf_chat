@@ -22,7 +22,7 @@ class Client final: public std::enable_shared_from_this<Client>
 	void showMessages()noexcept;
 
 	public:
-	Client(std::shared_ptr<Server>) noexcept;
+	Client(const std::shared_ptr<Server>&) noexcept;
 	Client(Client&) = delete;
 	Client(Client&&) = delete;
 

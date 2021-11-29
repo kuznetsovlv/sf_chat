@@ -9,8 +9,8 @@ class DataResponse final: public Response
 	const T _data;
 
 	public:
-	DataResponse(std::string)noexcept;
-	DataResponse(bool,std::string,T)noexcept;
+	explicit DataResponse(const std::string&)noexcept;
+	DataResponse(bool,const std::string&,const T&)noexcept;
 
 	const T &data()const noexcept;
 };

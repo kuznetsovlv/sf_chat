@@ -10,7 +10,7 @@
 
 const std::string emptyStr;
 
-Client::Client(std::shared_ptr<Server> server)noexcept:_server(server)
+Client::Client(const std::shared_ptr<Server> &server)noexcept:_server(server)
 {
 	_user.reset();
 }
@@ -40,7 +40,7 @@ void Client::chat()
 
 		if(message.front() == '@')
 		{
-			auto pos = message.find(":");
+			auto pos = message.find(':');
 
 			if(pos == std::string::npos)
 			{
@@ -238,5 +238,5 @@ void Client::request(NewMessageServerRequest &request)noexcept
 
 const std::string &Client::user()const noexcept
 {
-	return _user && _user.get() ? _user->login() : emptyStr;
+	return _user ? _user->login() : emptyStr;
 }

@@ -7,8 +7,8 @@ int main()
 {
 	try
 	{
-		Client client(getServer());
-		client.start();
+		std::shared_ptr<Client> client = std::make_shared<Client>(std::make_shared<Server>());
+		client->start();
 	}
 	catch(std::exception &error)
 	{

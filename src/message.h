@@ -11,7 +11,7 @@ class Message final
 
 	public:
 	Message()noexcept;
-	Message(const std::string, const std::string, const std::string)noexcept;
+	Message(const std::string&, const std::string&, const std::string&)noexcept;
 
 	const std::string &from()const noexcept;
 	const std::string &to()const noexcept;
