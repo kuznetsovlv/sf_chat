@@ -76,16 +76,15 @@ bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 const Message &Server::message(std::string login)
 {
 	size_t count = 0;
-	for(size_t i = 0; i < _messages.size(); ++i)
+	for(Message &message: _messages)
 	{
-		Message message = _messages[i];
 		if(message.to() == ALL || message.to() == login)
 		{
 			++count;
 			if (count > _sent[login])
 			{
 				++_sent[login];
-				return _messages[i];
+				return message;
 			}
 		}
 	}
