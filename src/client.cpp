@@ -113,6 +113,8 @@ bool Client::loginAndChat(std::string &login, std::string &password)
 		return true;
 	}
 
+	std::cout << response.message() << std::endl;
+
 	return false;
 }
 
