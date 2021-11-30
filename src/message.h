@@ -4,14 +4,17 @@
 class Message final
 {
 	private:
-	std::string _msg;
-	std::string _from;
-	std::string _to;
+	const std::string _msg;
+	const std::string _from;
+	const std::string _to;
+	const bool _empty;
 
 	public:
-	Message(std::string, std::string, std::string)noexcept;
+	Message()noexcept;
+	Message(const std::string&, const std::string&, const std::string&)noexcept;
 
-	std::string from()const noexcept;
-	std::string to()const noexcept;
-	std::string msg()const noexcept;
+	const std::string &from()const noexcept;
+	const std::string &to()const noexcept;
+	const std::string &msg()const noexcept;
+	bool empty()const noexcept;
 };

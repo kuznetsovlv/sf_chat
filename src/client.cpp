@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include <string>
 #include "client.h"
 #include "input.h"
@@ -7,13 +8,11 @@
 #include "request.h"
 #include "response.h"
 
-Client::Client(Server *server)noexcept:_server(server)
-{
-}
+const std::string emptyStr;
 
-Client::~Client()noexcept
+Client::Client(const std::shared_ptr<Server> &server)noexcept:_server(server)
 {
-	deleteServer();
+	_user.reset();
 }
 
 void Client::chat()
@@ -34,6 +33,7 @@ void Client::chat()
 
 		if(message == "!quit")
 		{
+			logout();
 			return;
 		}
 
@@ -41,7 +41,7 @@ void Client::chat()
 
 		if(message.front() == '@')
 		{
-			auto pos = message.find(":");
+			auto pos = message.find(':');
 
 			if(pos == std::string::npos)
 			{
@@ -60,8 +60,8 @@ void Client::chat()
 
 		Message msg(message, user(), to);
 
-		SendMessageRequest request(this, msg);
-		Response<void> response = _server->request(request);
+		SendMessageRequest request(ptr(), msg);
+		Response response = _server->request(request);
 
 		if(!response.success())
 		{
@@ -72,18 +72,19 @@ void Client::chat()
 
 void Client::logout() noexcept
 {
-	LogoutRequest request(this);
+	LogoutRequest request(ptr());
 	std::cout << _server->request(request).message() << std::endl;
-	_user = nullptr;
+	_user.reset();
 }
 
 void Client::login()
 {
+	ignore();
+
 	for(unsigned i = 0; i < 3; ++i)
 	{
 		std::cout << "Login: ";
 		std::string login;
-		ignore();
 		std::getline(std::cin, login);
 		std::cout << "Password: ";
 		//TODO: Разобраться, как скрыть ввод.
@@ -101,8 +102,8 @@ void Client::login()
 
 bool Client::loginAndChat(std::string &login, std::string &password)
 {
-	LoginRequest request(this, login, password);
-	Response<User> response = _server->request(request);
+	LoginRequest request(ptr(), login, password);
+	DataResponse<std::shared_ptr<User>> response = _server->request(request);
 
 	if(response.success())
 	{
@@ -111,6 +112,8 @@ bool Client::loginAndChat(std::string &login, std::string &password)
 		chat();
 		return true;
 	}
+
+	std::cout << response.message() << std::endl;
 
 	return false;
 }
@@ -140,9 +143,9 @@ void Client::registerUser()
 	}
 	while(password1 != password2);
 
-	RegistrationRequest request(this, login, fullName, password1);
+	RegistrationRequest request(ptr(), login, fullName, password1);
 
-	Response<void> response = _server->request(request);
+	Response response = _server->request(request);
 
 	if(response.success())
 	{
@@ -159,26 +162,26 @@ void Client::registerUser()
 
 void Client::showMessages()noexcept
 {
-	GetMessageRequest request(this);
+	GetMessageRequest request(ptr());
 	while(true)
 	{
-		Response<Message> response = _server->request(request);
+		DataResponse<Message> response = _server->request(request);
 
 		if(response.success())
 		{
-			Message *message = response.data();
+			const Message &message = response.data();
 
-			if(message)
+			if(!message.empty())
 			{
 				std::cout << std::endl;
-				std::cout << (message->from() == user() ? "Me:" : message->from() + ":") << std::endl;
+				std::cout << (message.from() == user() ? "Me:" : message.from() + ":") << std::endl;
 
-				if(message->to() != ALL)
+				if(message.to() != ALL)
 				{
-					std::cout << "@" << message->to() << ": ";
+					std::cout << "@" << message.to() << ": ";
 				}
 
-				std::cout << message->msg() << std::endl << std::endl;
+				std::cout << message.msg() << std::endl << std::endl;
 			}
 			else
 			{
@@ -219,12 +222,25 @@ void Client::start()
 	std::cout << "Bye!" << std::endl;
 }
 
+std::shared_ptr<Client> Client::ptr()noexcept
+{
+	try
+	{
+		return shared_from_this();
+	}
+	catch(std::bad_weak_ptr &error)
+	{
+		std::shared_ptr<Client> ptr(this);
+		return ptr;
+	}
+}
+
 void Client::request(NewMessageServerRequest &request)noexcept
 {
 	_hasNewMessage = true;
 }
 
-std::string Client::user()const noexcept
+const std::string &Client::user()const noexcept
 {
-	return _user ? _user->login() : "";
+	return _user ? _user->login() : emptyStr;
 }
