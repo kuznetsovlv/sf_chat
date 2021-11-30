@@ -79,11 +79,12 @@ void Client::logout() noexcept
 
 void Client::login()
 {
+	ignore();
+
 	for(unsigned i = 0; i < 3; ++i)
 	{
 		std::cout << "Login: ";
 		std::string login;
-		ignore();
 		std::getline(std::cin, login);
 		std::cout << "Password: ";
 		//TODO: Разобраться, как скрыть ввод.
