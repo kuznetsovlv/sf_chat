@@ -1,7 +1,7 @@
 #pragma once
 #include <memory>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include "dataResponse.h"
 #include "message.h"
@@ -13,9 +13,13 @@ class Client;
 class Server final:public std::enable_shared_from_this<Server>
 {
 	private:
-	std::map<std::string, std::shared_ptr<User>> _users;
-	std::map<std::string, size_t> _sent;
+	// Users map
+	std::unordered_map<std::string, std::shared_ptr<User>> _users;
+	// Indexes of last messgae sent to each user
+	std::unordered_map<std::string, size_t> _sent;
+	// Messages
 	std::vector<Message> _messages;
+	// Connected clients
 	std::vector<std::shared_ptr<Client>> _clients;
 
 	bool hasUser(const std::string&)const noexcept;
