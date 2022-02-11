@@ -1,7 +1,7 @@
 #include <exception>
 #include <memory>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include "client.h"
 #include "dataResponse.h"
@@ -49,11 +49,11 @@ void Server::subscribe(std::shared_ptr<Client> client)
 
 void Server::unsubscribe(std::shared_ptr<Client> client)
 {
-	for(size_t i = 0; i < _clients.size(); ++i)
+	for(auto it = _clients.begin(); it != _clients.end(); ++it)
 	{
-		if(_clients[i].get() == client.get())
+		if(it->get() == client.get())
 		{
-			_clients.erase(_clients.begin() + i);
+			_clients.erase(it);
 			return;
 		}
 	}
