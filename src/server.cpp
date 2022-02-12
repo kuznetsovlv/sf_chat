@@ -44,7 +44,7 @@ void Server::saveMessage(const Message &message)
 
 void Server::subscribe(std::shared_ptr<Client> client)
 {
-	_clients.push_back(client);
+	_clients.insert(client);
 }
 
 void Server::unsubscribe(std::shared_ptr<Client> client)
@@ -61,14 +61,7 @@ void Server::unsubscribe(std::shared_ptr<Client> client)
 
 bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 {
-	for(auto c: _clients)
-	{
-		if(c.get() == client.get())
-		{
-			return true;
-		}
-	}
-	return false;
+	return _clients.find(client) != _clients.end();
 }
 
 const Message &Server::message(const std::string &login)
