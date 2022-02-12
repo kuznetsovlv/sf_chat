@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <set>
 #include <vector>
 #include "dataResponse.h"
 #include "message.h"
@@ -20,7 +21,7 @@ class Server final:public std::enable_shared_from_this<Server>
 	// Messages
 	std::vector<Message> _messages;
 	// Connected clients
-	std::vector<std::shared_ptr<Client>> _clients;
+	std::set<std::shared_ptr<Client>> _clients;
 
 	bool hasUser(const std::string&)const noexcept;
 	void createUser(const std::string&, const std::string&, const std::string&);
