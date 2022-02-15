@@ -57,5 +57,5 @@ void File::output(const std::string &line)
 {
 	_file.seekg(std::ios_base::end);
 	_line_positions.push_back(_file.tellg());
-	_file << line << '\n';
+	_file << line << std::endl;
 }
