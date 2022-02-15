@@ -46,8 +46,6 @@ File::File(const fs::path &path)
 			_line_positions.push_back(_file.tellg());
 		}
 	}
-
-	_file << "test";
 }
 
 File::~File()
@@ -59,5 +57,5 @@ void File::output(const std::string &line)
 {
 	_file.seekg(std::ios_base::end);
 	_line_positions.push_back(_file.tellg());
-	_file << line;
+	_file << line << '\n';
 }
