@@ -1,3 +1,4 @@
+#include <iostream>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -5,9 +6,7 @@
 #include <vector>
 #include "file.h"
 
-namespace fs = std::filesystem;
-
-file_exception::file_exception(const fs::path &path)noexcept:_path(path)
+file_exception::file_exception(const std::filesystem::path &path)noexcept:_path(path)
 {
 }
 
@@ -18,16 +17,9 @@ const char *file_exception::what()const noexcept
 	return  str.c_str();
 }
 
-File::File(const fs::path &path)
+File::File(const std::filesystem::path &path)
 {
-	if(fs::exists(path))
-	{
-		_file = std::fstream(path, std::ios::in | std::ios::app);
-	}
-	else
-	{
-		_file = std::fstream(path, std::ios::in | std::ios::app | std::ios::trunc);
-	}
+	_file = std::fstream(path, std::ios::in | std::ios::app);
 
 	if(!_file.is_open())
 	{
@@ -40,12 +32,15 @@ File::File(const fs::path &path)
 	while(!_file.eof())
 	{
 		char c;
-		_file >> c;
-		if(c == 0xa)
+		_file.get(c);
+		if(c == 0xa && !_file.eof() > 0)
 		{
 			_line_positions.push_back(_file.tellg());
 		}
 	}
+
+
+	_file = std::fstream(path, std::ios::in | std::ios::app);
 }
 
 File::~File()
@@ -55,7 +50,7 @@ File::~File()
 
 void File::output(const std::string &line)
 {
-	_file.seekg(std::ios_base::end);
-	_line_positions.push_back(_file.tellg());
 	_file << line << std::endl;
+	_file.seekg(0, std::ios_base::end);
+	_line_positions.push_back(_file.tellg());
 }
