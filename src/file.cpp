@@ -17,7 +17,7 @@ const char *file_exception::what()const noexcept
 	return  str.c_str();
 }
 
-File::File(const std::filesystem::path &path)
+File::File(const std::filesystem::path &path):_path(path)
 {
 	_file = std::fstream(path, std::ios::in | std::ios::app);
 
@@ -33,12 +33,11 @@ File::File(const std::filesystem::path &path)
 	{
 		char c;
 		_file.get(c);
-		if(c == 0xa && !_file.eof() > 0)
+		if(c == 0xa && !_file.eof())
 		{
 			_line_positions.push_back(_file.tellg());
 		}
 	}
-
 
 	_file = std::fstream(path, std::ios::in | std::ios::app);
 }
@@ -48,9 +47,41 @@ File::~File()
 	_file.close();
 }
 
+std::string File::getLine(const size_t index)
+{
+	std::string res;
+
+	if(index < lines())
+	{
+		_file.seekg(_line_positions[index], std::ios_base::beg);
+		while(true)
+		{
+			char c;
+			_file.get(c);
+			if(c == 0xa)
+			{
+				return res;
+			}
+			res += c;
+		}
+	}
+
+	return res;
+}
+
 void File::output(const std::string &line)
 {
 	_file << line << std::endl;
 	_file.seekg(0, std::ios_base::end);
 	_line_positions.push_back(_file.tellg());
+}
+
+size_t File::lines()const noexcept
+{
+	return _line_positions.size() - 1;
+}
+
+std::uintmax_t File::bytes()const
+{
+	return std::filesystem::file_size(_path);
 }
