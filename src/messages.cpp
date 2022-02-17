@@ -37,11 +37,18 @@ std::shared_ptr<Message> Messages::next()
 		return std::make_shared<Message>();
 	}
 
-	size_t pos = str.find(DELIMETER);
-	std::string date = str.substr(++pos, pos = str.find(DELIMETER, pos));
-	std::string from = str.substr(++pos, pos = str.find(DELIMETER, pos));
-	std::string to = str.substr(++pos, pos = str.find(DELIMETER, pos));
-	std::string message = str.substr(++pos, pos = str.find(DELIMETER, pos));
+	size_t pos1 = str.find(DELIMETER);
+	size_t pos2 = str.find(DELIMETER, ++pos1);
+	std::string date = str.substr(pos1, pos2 - pos1);
+	pos1 = pos2;
+	pos2 = str.find(DELIMETER, ++pos1);
+	std::string from = str.substr(pos1, pos2 - pos1);
+	pos1 = pos2;
+	pos2 = str.find(DELIMETER, ++pos1);
+	std::string to = str.substr(pos1, pos2 - pos1);
+	pos1 = pos2;
+	pos2 = str.find(DELIMETER, ++pos1);
+	std::string message = str.substr(pos1, pos2 - pos1);
 
 	return std::make_shared<Message>(message, from, to, date);
 }

@@ -29,7 +29,7 @@ int main()
 				break;
 			}
 
-			std::cout << message.date() << " " << message.from() << " " << message.to() << " " << message.msg() << std::endl;
+			std::cout << message.date() << " - " << message.from() << " - " << message.to() << " - " << message.msg() << std::endl;
 		}
 		/*std::shared_ptr<Client> client = std::make_shared<Client>(std::make_shared<Server>());
 		client->start();*/
