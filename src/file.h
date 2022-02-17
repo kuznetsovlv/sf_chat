@@ -33,7 +33,7 @@ class File
 	File(const std::filesystem::path&);
 	File(const File&) = delete;
 	File(const File&&) = delete;
-	~File();
+	virtual ~File();
 
 	virtual std::uintmax_t bytes()const final;
 
