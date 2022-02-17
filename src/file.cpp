@@ -39,7 +39,7 @@ File::File(const std::filesystem::path &path):_path(path)
 		}
 	}
 
-	_file = std::fstream(path, std::ios::in | std::ios::app);
+	_file.clear();
 }
 
 File::~File()
