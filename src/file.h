@@ -24,17 +24,18 @@ class File
 	std::fstream _file;
 	std::vector<std::fstream::pos_type> _line_positions;
 
+	protected:
+	std::string getLine(const size_t);
+	void output(const std::string&);
+	size_t lines()const noexcept;
+
 	public:
 	File(const std::filesystem::path&);
 	File(const File&) = delete;
 	File(const File&&) = delete;
 	~File();
 
-	std::string getLine(const size_t);
-	void output(const std::string&);
-	size_t lines()const noexcept;
-	std::uintmax_t bytes()const;
-
+	virtual std::uintmax_t bytes()const final;
 
 	File &operator=(File&) = delete;
 	File &operator=(File&&) = delete;
