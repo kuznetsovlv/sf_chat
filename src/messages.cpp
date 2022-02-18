@@ -46,7 +46,9 @@ size_t Messages::position()const noexcept
 void Messages::save(Message &message)
 {
 	std::string line;
-	std::string strs[] = {std::to_string(messages() + 1), now(), message.from(), message.to(), message.msg()};
+	std::string nowDate;
+	now(nowDate);
+	std::string strs[] = {std::to_string(messages() + 1), nowDate, message.from(), message.to(), message.msg()};
 	join(strs, FIELD_COUNT, DELIMETER, line);
 	output(line);
 }

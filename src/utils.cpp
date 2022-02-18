@@ -2,12 +2,12 @@
 #include <ctime>
 #include <string>
 
-const std::string now()
+void now(std::string &res)
 {
 	std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 	std::string str(std::ctime(&now));
 	str.pop_back();
-	return str;
+	res = str;
 }
 
 void split(std::string *buff, size_t buffSize, char delimeter, std::string &str)

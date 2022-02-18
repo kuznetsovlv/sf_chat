@@ -4,7 +4,7 @@
 #include <sstream>
 #include <string>
 
-const std::string now();
+void now(std::string&);
 
 void split(std::string*, size_t, char, std::string&);
 
