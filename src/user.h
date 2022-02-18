@@ -8,8 +8,8 @@ class User final: public std::enable_shared_from_this<User>
 {
 	private:
 	const std::string _login;
-	std::string _fullName;
-	std::string _password;
+	const std::string _fullName;
+	const std::string _password;
 
 	public:
 	User()noexcept;
