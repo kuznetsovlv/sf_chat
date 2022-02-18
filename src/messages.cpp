@@ -5,20 +5,15 @@
 #include "messages.h"
 
 const char DELIMETER = '\t';
+const size_t FIELD_COUNT = 5;
 
 Messages::Messages():File("messages.data"),_position(0)
 {
 	if(!lines())
 	{
-		std::string line = "Index";
-		line += DELIMETER;
-		line += "Date";
-		line += DELIMETER;
-		line += "From";
-		line += DELIMETER;
-		line += "To";
-		line += DELIMETER;
-		line += "Message";
+		std::string line;
+		std::string strs[] = {"Index", "Date", "From", "To", "Message"};
+		join(strs, FIELD_COUNT, DELIMETER, line);
 		output(line);
 	}
 }
@@ -34,23 +29,13 @@ std::shared_ptr<Message> Messages::next()
 
 	if(str.empty())
 	{
-		return std::make_shared<Message>();
+		return nullptr;
 	}
 
-	size_t pos1 = str.find(DELIMETER);
-	size_t pos2 = str.find(DELIMETER, ++pos1);
-	std::string date = str.substr(pos1, pos2 - pos1);
-	pos1 = pos2;
-	pos2 = str.find(DELIMETER, ++pos1);
-	std::string from = str.substr(pos1, pos2 - pos1);
-	pos1 = pos2;
-	pos2 = str.find(DELIMETER, ++pos1);
-	std::string to = str.substr(pos1, pos2 - pos1);
-	pos1 = pos2;
-	pos2 = str.find(DELIMETER, ++pos1);
-	std::string message = str.substr(pos1, pos2 - pos1);
+	std::string buff[FIELD_COUNT];
 
-	return std::make_shared<Message>(message, from, to, date);
+	split(buff, FIELD_COUNT, DELIMETER, str);
+	return std::make_shared<Message>(buff[4], buff[2], buff[3], buff[1]);
 }
 
 size_t Messages::position()const noexcept
@@ -60,7 +45,10 @@ size_t Messages::position()const noexcept
 
 void Messages::save(Message &message)
 {
-	output(std::to_string(messages() + 1) + DELIMETER + now() + DELIMETER + message.from() + DELIMETER + message.to() + DELIMETER + message.msg());
+	std::string line;
+	std::string strs[] = {std::to_string(messages() + 1), now(), message.from(), message.to(), message.msg()};
+	join(strs, FIELD_COUNT, DELIMETER, line);
+	output(line);
 }
 
 size_t Messages::messages()const noexcept

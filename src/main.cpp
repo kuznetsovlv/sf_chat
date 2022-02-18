@@ -23,13 +23,13 @@ int main()
 		m.seek(0);
 		while(true)
 		{
-			Message message = *m.next();
-			if(message.empty())
+			std::shared_ptr<Message> message = m.next();
+			if(!message || message->empty())
 			{
 				break;
 			}
 
-			std::cout << message.date() << " - " << message.from() << " - " << message.to() << " - " << message.msg() << std::endl;
+			std::cout << message->date() << " - " << message->from() << " - " << message->to() << " - " << message->msg() << std::endl;
 		}
 		/*std::shared_ptr<Client> client = std::make_shared<Client>(std::make_shared<Server>());
 		client->start();*/
