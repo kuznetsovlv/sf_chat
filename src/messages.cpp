@@ -4,7 +4,7 @@
 #include "utils.h"
 #include "messages.h"
 
-const char DELIMETER = '\t';
+const char DELIMETER = 0x9;
 const size_t FIELD_COUNT = 5;
 
 Messages::Messages():File("messages.data"),_position(0)

@@ -15,9 +15,9 @@ void split(std::string *buff, size_t buffSize, char delimeter, std::string &str)
 	size_t from = 0;
 	for(size_t i = 0; i < buffSize; ++i)
 	{
-		size_t to = str.find(delimeter, ++from);
+		size_t to = str.find(delimeter, from);
 		*(buff + i) = str.substr(from, to - from);
-		from = to;
+		from = to + 1;
 	}
 }
 

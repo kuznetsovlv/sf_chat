@@ -1,5 +1,5 @@
 #Makefile
-objects = main.o client.o cripto.o file.o input.o message.o messages.o response.o request.o server.o serverRequest.o user.o utils.o
+objects = main.o client.o cripto.o file.o input.o message.o messages.o response.o request.o server.o serverRequest.o user.o users.o utils.o
 standard = c++17
 
 .PHONY: all
@@ -8,7 +8,7 @@ all: chat
 chat: ${objects}
 	gcc -o chat ${objects} -lstdc++
 
-main.o: main.cpp client.h request.h server.h user.h users.h cripto.h
+main.o: main.cpp client.h request.h server.h user.h users.h
 	gcc -o main.o main.cpp -c -std=${standard}
 client.o: client.h dataResponse.h dataResponse.cpp input.h message.h request.h response.h server.h serverRequest.h user.h
 cripto.o: cripto.h
@@ -23,7 +23,7 @@ request.o: request.h client.h message.h
 server.o: server.h client.h dataResponse.h dataResponse.cpp message.h messages.h request.h response.h serverRequest.h user.h
 serverRequest.o: serverRequest.h
 user.o: user.h
-users.o: users.cpp users.h user.h
+users.o: users.cpp users.h user.h utils.h
 	gcc -o users.o users.cpp -c -std=${standard}
 utils.o: utils.h
 
