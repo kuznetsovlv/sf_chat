@@ -36,7 +36,7 @@ bool Users::exists(const User& user)
 	std::string buff[FIELD_COUNT];
 	for(size_t i = 1; i < lines(); ++i)
 	{
-		std::string line = getLine(i);
+		const std::string line = getLine(i);
 		split(buff, FIELD_COUNT, DELIMETER, line);
 		if(buff[1] == user.login())
 		{
@@ -51,7 +51,7 @@ bool Users::validate(const User& user)
 	std::string buff[FIELD_COUNT];
 	for(size_t i = 1; i < lines(); ++i)
 	{
-		std::string line = getLine(i);
+		const std::string line = getLine(i);
 		split(buff, FIELD_COUNT, DELIMETER, line);
 		if(buff[1] == user.login())
 		{

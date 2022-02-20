@@ -6,6 +6,6 @@
 
 void now(std::string&);
 
-void split(std::string*, size_t, char, std::string&);
+void split(std::string*, const size_t, const char, const std::string&);
 
-void join(std::string*, size_t, char, std::string&);
+void join(const std::string*, const size_t, const char, std::string&);

@@ -10,7 +10,7 @@ void now(std::string &res)
 	res = str;
 }
 
-void split(std::string *buff, size_t buffSize, char delimeter, std::string &str)
+void split(std::string *buff, const size_t buffSize, const char delimeter, const std::string &str)
 {
 	size_t from = 0;
 	for(size_t i = 0; i < buffSize; ++i)
@@ -21,7 +21,7 @@ void split(std::string *buff, size_t buffSize, char delimeter, std::string &str)
 	}
 }
 
-void join(std::string *strs, size_t count, char delimeter, std::string &res)
+void join(const std::string *strs, const size_t count, const char delimeter, std::string &res)
 {
 	res = *strs;
 
