@@ -6,6 +6,7 @@
 #include <vector>
 #include "dataResponse.h"
 #include "message.h"
+#include "messages.h"
 #include "response.h"
 #include "request.h"
 #include "user.h"
@@ -16,10 +17,10 @@ class Server final:public std::enable_shared_from_this<Server>
 	private:
 	// Users map
 	std::unordered_map<std::string, std::shared_ptr<User>> _users;
-	// Indexes of last messgae sent to each user
-	std::unordered_map<std::string, size_t> _sent;
+	// Indexes of last messgae sent to each client
+	std::unordered_map<std::shared_ptr<Client>, size_t> _send_from;
 	// Messages
-	std::vector<Message> _messages;
+	Messages _messages;
 	// Connected clients
 	std::set<std::shared_ptr<Client>> _clients;
 
@@ -29,7 +30,7 @@ class Server final:public std::enable_shared_from_this<Server>
 	void subscribe(std::shared_ptr<Client>);
 	void unsubscribe(std::shared_ptr<Client>);
 	bool subscribed(std::shared_ptr<Client> )const noexcept;
-	const Message &message(const std::string&);
+	const std::shared_ptr<Message> message(const std::shared_ptr<Client>);
 
 	public:
 	Server();

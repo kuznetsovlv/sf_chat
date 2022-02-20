@@ -3,11 +3,13 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "server.h"
 #include "client.h"
 #include "dataResponse.h"
-#include "server.h"
-#include "serverRequest.h"
 #include "message.h"
+#include "messages.h"
+#include "response.h"
+#include "serverRequest.h"
 #include "user.h"
 
 const Message emptyMessage;
@@ -25,12 +27,11 @@ bool Server::hasUser(const std::string &login)const noexcept
 void Server::createUser(const std::string &login, const std::string &fullName, const std::string &password)
 {
 	_users[login] = std::make_shared<User>(login, fullName, password);
-	_sent[login] = 0;
 }
 
 void Server::saveMessage(const Message &message)
 {
-	_messages.push_back(message);
+	_messages.save(message);
 	NewMessageServerRequest request;
 
 	for(auto client: _clients)
@@ -45,6 +46,7 @@ void Server::saveMessage(const Message &message)
 void Server::subscribe(std::shared_ptr<Client> client)
 {
 	_clients.insert(client);
+	_send_from[client] = 0;
 }
 
 void Server::unsubscribe(std::shared_ptr<Client> client)
@@ -54,7 +56,14 @@ void Server::unsubscribe(std::shared_ptr<Client> client)
 		if(it->get() == client.get())
 		{
 			_clients.erase(it);
-			return;
+			for(auto sit = _send_from.begin(); sit != _send_from.end();++sit)
+			{
+				if(sit->first == client)
+				{
+					_send_from.erase(sit);
+					return;
+				}
+			}
 		}
 	}
 }
@@ -64,22 +73,23 @@ bool Server::subscribed(std::shared_ptr<Client> client)const noexcept
 	return _clients.find(client) != _clients.end();
 }
 
-const Message &Server::message(const std::string &login)
+const std::shared_ptr<Message> Server::message(const std::shared_ptr<Client> client)
 {
 	size_t count = 0;
-	for(Message &message: _messages)
+	const std::string login = client->user();
+	_messages.seek(_send_from[client]);
+	std::shared_ptr<Message> message;
+
+	while(message = _messages.next())
 	{
-		if(message.to() == ALL || message.to() == login)
+		if(message->to() == ALL || message->to() == client->user())
 		{
-			++count;
-			if (count > _sent[login])
-			{
-				++_sent[login];
-				return message;
-			}
+			_send_from[client] = _messages.position();
+			return message;
 		}
 	}
-	return emptyMessage;
+
+	return nullptr;
 }
 
 Response Server::request(RegistrationRequest &request)noexcept
@@ -170,7 +180,7 @@ DataResponse<Message> Server::request(GetMessageRequest &request)noexcept
 		{
 			try
 			{
-				DataResponse<Message> response(true, "Ok", message(request.client()->user()));
+				DataResponse<Message> response(true, "Ok", *message(request.client()));
 				return response;
 			}
 			catch(std::exception &error)

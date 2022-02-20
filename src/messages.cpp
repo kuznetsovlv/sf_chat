@@ -43,7 +43,7 @@ size_t Messages::position()const noexcept
 	return _position;
 }
 
-void Messages::save(Message &message)
+void Messages::save(const Message &message)
 {
 	std::string line;
 	std::string nowDate;

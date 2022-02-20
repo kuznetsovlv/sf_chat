@@ -10,7 +10,8 @@ chat: ${objects}
 
 main.o: main.cpp client.h request.h server.h user.h users.h
 	gcc -o main.o main.cpp -c -std=${standard}
-client.o: client.h dataResponse.h dataResponse.cpp input.h message.h request.h response.h server.h serverRequest.h user.h
+client.o: client.h client.cpp dataResponse.h dataResponse.cpp input.h message.h request.h response.h server.h serverRequest.h user.h
+	gcc -o client.o client.cpp -c -std=${standard}
 cripto.o: cripto.h
 file.o: file.cpp file.h
 	gcc -o file.o file.cpp -c -std=${standard}
@@ -19,8 +20,10 @@ message.o: message.h user.h
 messages.o: messages.cpp messages.h file.h message.h utils.h
 	gcc -o messages.o messages.cpp -c -std=${standard}
 response.o: response.h
-request.o: request.h client.h message.h
-server.o: server.h client.h dataResponse.h dataResponse.cpp message.h messages.h request.h response.h serverRequest.h user.h
+request.o: request.h request.cpp client.h message.h
+	gcc -o request.o request.cpp -c -std=${standard}
+server.o: server.h server.cpp client.h dataResponse.h dataResponse.cpp file.h message.h messages.h request.h response.h serverRequest.h user.h users.h
+	gcc -o server.o server.cpp -c -std=${standard}
 serverRequest.o: serverRequest.h
 user.o: user.h
 users.o: users.cpp users.h user.h utils.h
@@ -29,4 +32,4 @@ utils.o: utils.h
 
 .PHONY: clean
 clean:
-	-rm -f chat *.o 2>/dev/null
+	-rm -f chat *.o *.data 2>/dev/null

@@ -169,12 +169,12 @@ void Client::showMessages()noexcept
 
 		if(response.success())
 		{
-			const Message &message = response.data();
+			const Message message = response.data();
 
 			if(!message.empty())
 			{
 				std::cout << std::endl;
-				std::cout << (message.from() == user() ? "Me:" : message.from() + ":") << std::endl;
+				std::cout << (message.from() == user() ? "Me" : message.from()) << " (" << message.date() << "):" << std::endl;
 
 				if(message.to() != ALL)
 				{
