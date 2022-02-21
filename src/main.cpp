@@ -5,7 +5,6 @@
 
 int main()
 {
-
 	try
 	{
 		std::shared_ptr<Client> client = std::make_shared<Client>(std::make_shared<Server>());
