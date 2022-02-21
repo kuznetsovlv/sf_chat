@@ -10,13 +10,13 @@
 #include "response.h"
 #include "request.h"
 #include "user.h"
+#include "users.h"
 
 class Client;
 class Server final:public std::enable_shared_from_this<Server>
 {
 	private:
-	// Users map
-	std::unordered_map<std::string, std::shared_ptr<User>> _users;
+	Users _users;
 	// Indexes of last messgae sent to each client
 	std::unordered_map<std::shared_ptr<Client>, size_t> _send_from;
 	// Messages
@@ -24,7 +24,7 @@ class Server final:public std::enable_shared_from_this<Server>
 	// Connected clients
 	std::set<std::shared_ptr<Client>> _clients;
 
-	bool hasUser(const std::string&)const noexcept;
+	bool hasUser(const std::string&);
 	void createUser(const std::string&, const std::string&, const std::string&);
 	void saveMessage(const Message&);
 	void subscribe(std::shared_ptr<Client>);

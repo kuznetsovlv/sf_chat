@@ -16,17 +16,22 @@ const Message emptyMessage;
 
 Server::Server()
 {
-	_users[ALL] = std::make_shared<User>();
+	User all;
+	if(!_users.exists(all))
+	{
+		_users.add(all);
+	}
 }
 
-bool Server::hasUser(const std::string &login)const noexcept
+bool Server::hasUser(const std::string &login)
 {
-	return _users.find(login) != _users.end();
+	return _users.exists(login);
 }
 
 void Server::createUser(const std::string &login, const std::string &fullName, const std::string &password)
 {
-	_users[login] = std::make_shared<User>(login, fullName, password);
+	User user(login, fullName, password);
+	_users.add(user);
 }
 
 void Server::saveMessage(const Message &message)
@@ -116,23 +121,19 @@ Response Server::request(RegistrationRequest &request)noexcept
 
 DataResponse<std::shared_ptr<User>> Server::request(LoginRequest &request)noexcept
 {
-	if(hasUser(request.login()))
+	std::shared_ptr<User> user = _users.user(request.login(), request.password());
+	if(user)
 	{
-		std::shared_ptr<User> user = _users[request.login()];
-
-		if(user->password() == request.password())
+		try
 		{
-			try
-			{
-				subscribe(request.client());
-				DataResponse<std::shared_ptr<User>> response(true, "Ok", user);
-				return response;
-			}
-			catch(std::exception &error)
-			{
-				DataResponse<std::shared_ptr<User>> response("Can not login: " + std::string(error.what()));
-				return response;
-			}
+			subscribe(request.client());
+			DataResponse<std::shared_ptr<User>> response(true, "Ok", user);
+			return response;
+		}
+		catch(std::exception &error)
+		{
+			DataResponse<std::shared_ptr<User>> response("Can not login: " + std::string(error.what()));
+			return response;
 		}
 	}
 

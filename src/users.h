@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
-#include "user.h"
 #include "file.h"
+#include "user.h"
 
 class Users final: public File
 {
@@ -10,6 +10,9 @@ class Users final: public File
 
 	void add(const User&);
 	bool exists(const User&);
+	bool exists(const std::string&);
 	bool validate(const User&);
+	bool validate(const std::string&, const std::string);
+	std::shared_ptr<User> user(const std::string&, const std::string&);
 	size_t users()const noexcept;
 };
