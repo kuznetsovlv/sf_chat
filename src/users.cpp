@@ -92,8 +92,7 @@ std::shared_ptr<User> Users::user(const std::string &login, const std::string &p
 
 			if(hashStr == passBuff[1])
 			{
-				std::shared_ptr<User> user = std::make_shared<User>(login, buff[2], password);
-				return user;
+				return std::make_shared<User>(login, buff[2], password);
 			}
 			return nullptr;
 		}
