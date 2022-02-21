@@ -132,7 +132,7 @@ DataResponse<std::shared_ptr<User>> Server::request(LoginRequest &request)noexce
 		}
 		catch(std::exception &error)
 		{
-			DataResponse<std::shared_ptr<User>> response("Can not login: " + std::string(error.what()));
+			DataResponse<std::shared_ptr<User>> response(false, "Can not login: " + std::string(error.what()), nullptr);
 			return response;
 		}
 	}
@@ -181,7 +181,9 @@ DataResponse<Message> Server::request(GetMessageRequest &request)noexcept
 		{
 			try
 			{
-				DataResponse<Message> response(true, "Ok", *message(request.client()));
+				std::shared_ptr<Message> msg = message(request.client());
+				Message m = msg ? *msg : emptyMessage;
+				DataResponse<Message> response(true, "Ok", m);
 				return response;
 			}
 			catch(std::exception &error)
