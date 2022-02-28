@@ -1,35 +1,19 @@
 #Makefile
-objects = main.o client.o cripto.o file.o input.o message.o messages.o response.o request.o server.o serverRequest.o user.o users.o utils.o
+client_objects = chat-client.o
+server_objects = chat-server.o
 standard = c++17
 
 .PHONY: all
-all: chat
+all: chat-client chat-server
 
-chat: ${objects}
-	gcc -o chat ${objects} -lstdc++
+chat-client: ${client_objects}
+	gcc -o chat-client ${client_objects} -lstdc++
+chat-server: ${server_objects}
+	gcc -o chat-server ${server_objects} -lstdc++
 
-main.o: main.cpp client.h request.h server.h user.h users.h
-	gcc -o main.o main.cpp -c -std=${standard}
-client.o: client.h client.cpp dataResponse.h dataResponse.cpp input.h message.h request.h response.h server.h serverRequest.h user.h
-	gcc -o client.o client.cpp -c -std=${standard}
-cripto.o: cripto.h
-file.o: file.cpp file.h
-	gcc -o file.o file.cpp -c -std=${standard}
-input.o: input.h
-message.o: message.h user.h
-messages.o: messages.cpp messages.h file.h message.h utils.h
-	gcc -o messages.o messages.cpp -c -std=${standard}
-response.o: response.h
-request.o: request.h request.cpp client.h message.h
-	gcc -o request.o request.cpp -c -std=${standard}
-server.o: server.h server.cpp client.h dataResponse.h dataResponse.cpp file.h message.h messages.h request.h response.h serverRequest.h user.h users.h
-	gcc -o server.o server.cpp -c -std=${standard}
-serverRequest.o: serverRequest.h
-user.o: user.h
-users.o: users.cpp users.h user.h utils.h
-	gcc -o users.o users.cpp -c -std=${standard}
-utils.o: utils.h
+chat-client.o:
+chat-server.o:
 
 .PHONY: clean
 clean:
-	-rm -f chat *.o *.data 2>/dev/null
+	-rm -f chat-client chat-server *.o *.data 2>/dev/null
