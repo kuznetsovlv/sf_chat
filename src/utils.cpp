@@ -40,7 +40,7 @@ void join(const std::string *strs, const size_t count, const char delimeter, std
 
 uint8_t *toBytes(const uint32_t from_id, const Message &message, size_t &size)
 {
-	size = sizeof(uint32_t) + sizeof(rtype) + (message.from().size() + message.to().size() + message.msg().size() + message.date().size() + 4) * sizeof(char);
+	size = sizeof(uint32_t) + sizeof(uint32_t) + (message.from().size() + message.to().size() + message.msg().size() + message.date().size() + 4) * sizeof(char);
 
 	uint8_t *data = new uint8_t[size];
 
@@ -49,7 +49,7 @@ uint8_t *toBytes(const uint32_t from_id, const Message &message, size_t &size)
 	const uint32_t network_from_id = htonl(from_id);
 	memcpy(p, &network_from_id, sizeof(uint32_t));
 
-	p += (sizeof(uint32_t) + sizeof(rtype));
+	p += (sizeof(uint32_t) + sizeof(uint32_t));
 	strcpy(reinterpret_cast<char*>(p), message.from().c_str());
 
 	p += (message.from().size() + 1) * sizeof(char);
@@ -67,7 +67,7 @@ uint8_t *toBytes(const uint32_t from_id, const Message &message, size_t &size)
 
 uint8_t *toBytes(const uint32_t from_id, const User &user, size_t &size)
 {
-	size = sizeof(uint32_t) + sizeof(rtype) + (user.login().size() + user.fullName().size() + user.password().size() + 3) * sizeof(char);
+	size = sizeof(uint32_t) + sizeof(uint32_t) + (user.login().size() + user.fullName().size() + user.password().size() + 3) * sizeof(char);
 
 	uint8_t *data = new uint8_t[size];
 
@@ -76,7 +76,7 @@ uint8_t *toBytes(const uint32_t from_id, const User &user, size_t &size)
 	const uint32_t network_from_id = htonl(from_id);
 	memcpy(p, &network_from_id, sizeof(uint32_t));
 
-	p += (sizeof(uint32_t) + sizeof(rtype));
+	p += (sizeof(uint32_t) + sizeof(uint32_t));
 	strcpy(reinterpret_cast<char*>(p), user.login().c_str());
 
 	p += (user.login().size() + 1) * sizeof(char);
@@ -86,4 +86,11 @@ uint8_t *toBytes(const uint32_t from_id, const User &user, size_t &size)
 	strcpy(reinterpret_cast<char*>(p), user.password().c_str());
 
 	return data;
+}
+
+void addType(uint8_t *data, const rtype type)
+{
+	const uint32_t network_type = htonl(static_cast<uint32_t>(type));
+
+	memcpy(data + sizeof(uint32_t), &network_type, sizeof(uint32_t));
 }
