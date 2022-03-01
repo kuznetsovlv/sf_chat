@@ -1,5 +1,7 @@
+#include <cstring>
 #include <string>
 #include "user.h"
+#include "rtype.h"
 
 const std::string ALL = "_ALL_";
 
