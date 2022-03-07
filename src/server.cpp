@@ -181,6 +181,11 @@ void session(Server &server, const int sockd)
 						response(connection, success);
 						break;
 					}
+					case rtype::LOGIN:
+					{
+						std::shared_ptr<User> user = bytesToUser(buffer);
+						bool success = false;
+					}
 				}
 			}
 
