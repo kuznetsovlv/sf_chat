@@ -136,6 +136,11 @@ void Server::run(const uint16_t port)
 	close(sockd);
 }
 
+bool Server::validate(const User &user)
+{
+	return _users.validate(user);
+}
+
 void session(Server &server, const int sockd)
 {
 	std::unique_lock<std::mutex> guard(serverMutex, std::defer_lock);
@@ -159,33 +164,123 @@ void session(Server &server, const int sockd)
 
 			const rtype requestType = getType(buffer);
 
-			if(requestType == rtype::SIZE)
+			switch(requestType)
 			{
-				bufferSize = ntohl(*reinterpret_cast<uint32_t*>(buffer + sizeof(uint32_t)));
-			}
-			else
-			{
-				switch(requestType)
+				case rtype::SIZE:
 				{
-					case rtype::REGISTRATION:
+					try
+					{
+						bufferSize = ntohl(*reinterpret_cast<uint32_t*>(buffer + sizeof(uint32_t)));
+						response(connection, true);
+					}
+					catch(...)
+					{
+						response(connection, false);
+					}
+					break;
+				}
+				case rtype::REGISTRATION:
+				{
+					bool locked = false;
+					try
 					{
 						std::shared_ptr<User> user = bytesToUser(buffer);
 						bool success = false;
 						guard.lock();
+						locked = true;
 						if(!server.hasUser(user->login()))
 						{
 							server.createUser(user->login(), user->fullName(), user->password());
 							success = true;
 						}
 						guard.unlock();
+						locked = false;
 						response(connection, success);
-						break;
 					}
-					case rtype::LOGIN:
+					catch(...)
+					{
+						if(locked)
+						{
+							guard.unlock();
+						}
+						response(connection, false);
+					}
+					break;
+				}
+				case rtype::LOGIN:
+				{
+					bool locked = false;
+					try
 					{
 						std::shared_ptr<User> user = bytesToUser(buffer);
-						bool success = false;
+						guard.lock();
+						locked = true;
+						const bool success = server.validate(*user);
+						if(success)
+						{
+							server.subscribe(id, user->login());
+						}
+						guard.unlock();
+						locked = false;
+						response(connection, success);
 					}
+					catch(...)
+					{
+						if(locked)
+						{
+							guard.unlock();
+						}
+						response(connection, false);
+					}
+					break;
+				}
+				case rtype::LOGOUT:
+				{
+					locked = false;
+					try
+					{
+						guard.lock();
+						locked = true;
+						if(server.subscribed(id))
+						{
+							server.unsubscribe(id);
+						}
+						guard.unlock();
+						locked = false;
+						response(connection, true);
+					}
+					catch(...)
+					{
+						if(locked)
+						{
+							guard.unlock();
+						}
+						response(connection, false);
+					}
+					break;
+				}
+				case rtype::MESSAGE:
+				{
+					bool locked = false;
+					try
+					{
+						const std::shared_ptr<Message> message = bytesToMessage(buffer);
+						guard.lock();
+						locked = true;
+						server.saveMessage(*message);
+						guard.unlock();
+						locked = false;
+						response(connection, true);
+					}
+					catch(...)
+					{
+						if(locked)
+						{
+							guard.unlock();
+						}
+						response(connection, false);
+					}
+					break;
 				}
 			}
 
@@ -197,5 +292,20 @@ void session(Server &server, const int sockd)
 void response(const int connection, const bool success)
 {
 	uint32_t type = htonl(static_cast<uint32_t>(success ? rtype::SUCCESS : rtype::FAIL));
+	write(connection, &type, sizeof(type));
+}
+
+void response(const int connection, const Message &message)
+{
+	size_t size;
+	uint8_t *data = toBytes(message, size);
+	addType(data, rtype::MESSAGE);
+	write(connection, data, size);
+	delete [] data;
+}
+
+void response(const int connection)
+{
+	uint32_t type = htonl(static_cast<uint32_t>(rtype::EMPTY));
 	write(connection, &type, sizeof(type));
 }

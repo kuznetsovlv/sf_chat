@@ -15,6 +15,7 @@ void session(Server&, const int);
 
 void response(const int, const bool);
 void response(const int, const Message&);
+void response(const int);
 
 class NetworkException final: public std::exception
 {
@@ -44,6 +45,7 @@ class Server final
 	void unsubscribe(const std::thread::id);
 	bool subscribed(std::thread::id)const noexcept;
 	const std::shared_ptr<Message> message(const std::thread::id);
+	bool validate(const User&);
 
 	public:
 	Server();
