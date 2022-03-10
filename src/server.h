@@ -1,5 +1,4 @@
 #pragma once
-#include <exception>
 #include <memory>
 #include <string>
 #include <thread>
@@ -16,17 +15,6 @@ void session(Server&, const int);
 void response(const int, const bool);
 void response(const int, const Message&);
 void response(const int);
-
-class NetworkException final: public std::exception
-{
-	private:
-	const char *_what;
-
-	public:
-	NetworkException(const char*);
-
-	virtual const char *what()const noexcept override;
-};
 
 class Server final
 {

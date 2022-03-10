@@ -1,5 +1,5 @@
 #Makefile
-common = message.o user.o utils.o
+common = message.o networkException.o user.o utils.o
 client_objects = chat-client.o ${common}
 server_objects = chat-server.o cripto.o file.o messages.o users.o server.o ${common}
 standard = c++17
@@ -12,13 +12,15 @@ chat-client: ${client_objects}
 chat-server: ${server_objects}
 	gcc -o chat-server ${server_objects} -lstdc++ -std=${standard} -pthread
 
-chat-client.o: rtype.h utils.h
-chat-server.o: server.h server.cpp utils.h
+chat-client.o: chat-client.cpp client.h utils.h
+	gcc -o chat-client.o chat-client.cpp -c -std=${standard}
+chat-server.o: chat-server.cpp server.h utils.h
 	gcc -o chat-server.o chat-server.cpp -c -std=${standard}
 
 cripto.o: cripto.h
 file.o: file.h file.cpp
 	gcc -o file.o file.cpp -c -std=${standard}
+networkException.o: networkException.h
 message.o: message.h user.h
 messages.o: messages.h messages.cpp file.h message.h utils.h
 	gcc -o messages.o messages.cpp -c -std=${standard}

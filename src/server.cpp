@@ -10,23 +10,13 @@
 #include <unistd.h>
 #include "server.h"
 #include "client.h"
+#include "networkException.h"
 #include "message.h"
 #include "messages.h"
 #include "user.h"
 #include "utils.h"
 
-#include <iostream>
-
 std::mutex serverMutex;
-
-NetworkException::NetworkException(const char *what):_what(what)
-{
-}
-
-const char *NetworkException::what()const noexcept
-{
-	return _what;
-}
 
 Server::Server()
 {
