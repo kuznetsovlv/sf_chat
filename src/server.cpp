@@ -116,6 +116,11 @@ void Server::run(const uint16_t port)
 		throw NetworkException("Socket binding failed");
 	}
 
+	if(listen(sockd, 5) == -1)
+	{
+		throw NetworkException("Socket is unable to listen for new connection");
+	}
+
 	while(true)
 	{
 		std::thread thread(session, std::ref(*this), sockd);
