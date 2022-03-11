@@ -1,9 +1,21 @@
+#include <exception>
 #include <iostream>
-#include "rtype.h"
+#include <string>
+#include "client.h"
+#include "utils.h"
 
-int main()
+int main(int argv, char **args)
 {
-	std::cout << sizeof(rtype) << " " << sizeof(rtype::EMPTY) << std::endl;
-	std::cout << sizeof(size_t) << std::endl;
+	try
+	{
+		Client c(argv > 1 ? std::string(*(args + 1)) : "127.0.0.1");
+		c.start();
+	}
+	catch(std::exception &error)
+	{
+		std::cerr << error.what() << std::endl;
+		return 1;
+	}
+
 	return 0;
 }

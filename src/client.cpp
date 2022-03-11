@@ -1,23 +1,26 @@
 #include <iostream>
-#include <memory>
 #include <string>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include "client.h"
 #include "input.h"
-#include "server.h"
-#include "serverRequest.h"
-#include "request.h"
-#include "response.h"
+#include "networkException.h"
+#include "utils.h"
 
 const std::string emptyStr;
 
-Client::Client(const std::shared_ptr<Server> &server)noexcept:_server(server)
+Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0)),_connection(0)
 {
-	_user.reset();
+	if(_sockd == -1)
+	{
+		throw NetworkException("Creation of Socked failed");
+	}
 }
 
 void Client::chat()
 {
-	showMessages();
+	/*showMessages();
 
 	while(true)
 	{
@@ -67,19 +70,19 @@ void Client::chat()
 		{
 			std::cout << response.message() << std::endl;
 		}
-	}
+	}*/
 }
 
-void Client::logout() noexcept
+void Client::logout()
 {
-	LogoutRequest request(ptr());
+	/*LogoutRequest request(ptr());
 	std::cout << _server->request(request).message() << std::endl;
-	_user.reset();
+	_user.reset();*/
 }
 
 void Client::login()
 {
-	ignore();
+	/*ignore();
 
 	for(unsigned i = 0; i < 3; ++i)
 	{
@@ -97,12 +100,12 @@ void Client::login()
 		}
 	}
 
-	std::cout << "Authorisation failed!" << std::endl;
+	std::cout << "Authorisation failed!" << std::endl;*/
 }
 
 bool Client::loginAndChat(std::string &login, std::string &password)
 {
-	LoginRequest request(ptr(), login, password);
+	/*LoginRequest request(ptr(), login, password);
 	DataResponse<std::shared_ptr<User>> response = _server->request(request);
 
 	if(response.success())
@@ -114,13 +117,13 @@ bool Client::loginAndChat(std::string &login, std::string &password)
 	}
 
 	std::cout << response.message() << std::endl;
-
+*/
 	return false;
 }
 
 void Client::registerUser()
 {
-	std::cout << "Enter your full name: ";
+/*	std::cout << "Enter your full name: ";
 	std::string fullName;
 	ignore();
 	std::getline(std::cin, fullName);
@@ -157,12 +160,12 @@ void Client::registerUser()
 		std::cout << response.message() << std::endl;
 	}
 
-	std::cout << std::endl;
+	std::cout << std::endl;*/
 }
 
-void Client::showMessages()noexcept
+void Client::showMessages()
 {
-	GetMessageRequest request(ptr());
+	/*GetMessageRequest request(ptr());
 	while(true)
 	{
 		DataResponse<Message> response = _server->request(request);
@@ -193,12 +196,23 @@ void Client::showMessages()noexcept
 		{
 			std::cout << response.message() << std::endl;
 		}
-	}
+	}*/
 }
 
 void Client::start()
 {
-	std::cout << "Greetings in our chat!" << std::endl;
+	struct sockaddr_in server;
+	server.sin_addr.s_addr = inet_addr(_ip.c_str());
+	server.sin_port = htons(_port);
+	server.sin_family = AF_INET;
+
+	_connection = connect(_sockd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server));
+
+	if(_connection == -1)
+	{
+		throw NetworkException("Connection with the server failed");
+	}
+	/*std::cout << "Greetings in our chat!" << std::endl;
 
 	char comand;
 
@@ -219,28 +233,5 @@ void Client::start()
 		}
 	} while(comand != 'q' && comand != 'Q');
 
-	std::cout << "Bye!" << std::endl;
-}
-
-std::shared_ptr<Client> Client::ptr()noexcept
-{
-	try
-	{
-		return shared_from_this();
-	}
-	catch(std::bad_weak_ptr &error)
-	{
-		std::shared_ptr<Client> ptr(this);
-		return ptr;
-	}
-}
-
-void Client::request(NewMessageServerRequest &request)noexcept
-{
-	_hasNewMessage = true;
-}
-
-const std::string &Client::user()const noexcept
-{
-	return _user ? _user->login() : emptyStr;
+	std::cout << "Bye!" << std::endl;*/
 }
