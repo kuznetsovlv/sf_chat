@@ -166,7 +166,7 @@ void session(Server &server, const int sockd)
 				{
 					try
 					{
-						bufferSize = ntohl(*reinterpret_cast<uint32_t*>(buffer + sizeof(uint32_t)));
+						bufferSize = static_cast<size_t>(ntohl(*reinterpret_cast<uint32_t*>(buffer + sizeof(uint32_t))));
 						response(connection, true);
 					}
 					catch(...)

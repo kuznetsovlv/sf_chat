@@ -24,14 +24,9 @@ Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(A
 
 void Client::chat()
 {
-	/*showMessages();
-
 	while(true)
 	{
-		if(_hasNewMessage)
-		{
-			showMessages();
-		}
+		showMessages();
 
 		std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
 
@@ -65,23 +60,26 @@ void Client::chat()
 			to = ALL;
 		}
 
-		Message msg(message, user(), to);
+		const Message msg(message, _login, to);
 
-		SendMessageRequest request(ptr(), msg);
-		Response response = _server->request(request);
-
-		if(!response.success())
+		if(!request(msg, rtype::MESSAGE))
 		{
-			std::cout << response.message() << std::endl;
+			throw NetworkException("Sending message failed");
 		}
-	}*/
+	}
 }
 
 void Client::logout()
 {
-	/*LogoutRequest request(ptr());
-	std::cout << _server->request(request).message() << std::endl;
-	_user.reset();*/
+	const uint32_t logoutType = static_cast<uint32_t>(rtype::LOGOUT);
+	write(_sockd, &logoutType, sizeof(uint32_t));
+	uint8_t response[sizeof(uint32_t)];
+	read(_sockd, response, sizeof(uint32_t));
+
+	if(getType(response) != rtype::SUCCESS)
+	{
+		throw NetworkException("Server error");
+	}
 }
 
 void Client::login()
@@ -183,40 +181,67 @@ bool Client::request(const User &user, const rtype type)
 	return success;
 }
 
+bool Client::request(const Message &message, const rtype type)
+{
+	size_t size;
+	uint8_t *data = toBytes(message, size);
+	addType(data, type);
+	bool success = send(_sockd, data, size);
+	delete [] data;
+
+	return success;
+}
+
 void Client::showMessages()
 {
-	/*GetMessageRequest request(ptr());
+	const uint32_t emptyType = htonl(static_cast<uint32_t>(rtype::EMPTY));
 	while(true)
 	{
-		DataResponse<Message> response = _server->request(request);
+		write(_sockd, &emptyType, sizeof(uint32_t));
 
-		if(response.success())
+		uint8_t sizeData[2 * sizeof(uint32_t)];
+		read(_sockd, sizeData, 2 *sizeof(uint32_t));
+
+		if(getType(sizeData) == rtype::SIZE)
 		{
-			const Message message = response.data();
+			const size_t size = static_cast<size_t>(ntohl(*reinterpret_cast<uint32_t*>(sizeData + sizeof(uint32_t))));
+			uint8_t *data = new uint8_t[size];
+			read(_sockd, data, size);
 
-			if(!message.empty())
+			switch(getType(data))
 			{
-				std::cout << std::endl;
-				std::cout << (message.from() == user() ? "Me" : message.from()) << " (" << message.date() << "):" << std::endl;
-
-				if(message.to() != ALL)
+				case rtype::EMPTY:
 				{
-					std::cout << "@" << message.to() << ": ";
+					delete [] data;
+					return;
 				}
+				case rtype::MESSAGE:
+				{
+					std::shared_ptr<Message> message = bytesToMessage(data);
+					std::cout << std::endl;
+					std::cout << (message->from() == _login ? "Me" : message->from()) << " (" << message->date() << "):" << std::endl;
+					if(message->to() != ALL)
+					{
+						std::cout << "@" << message->to() << ": ";
+					}
 
-				std::cout << message.msg() << std::endl << std::endl;
-			}
-			else
-			{
-				_hasNewMessage = false;
-				return;
+					std::cout << message->msg() << std::endl << std::endl;
+
+					delete [] data;
+					break;
+				}
+				default:
+				{
+					delete [] data;
+					throw NetworkException("Server error");
+				}
 			}
 		}
 		else
 		{
-			std::cout << response.message() << std::endl;
+			throw NetworkException("Server error");
 		}
-	}*/
+	}
 }
 
 void Client::start()
