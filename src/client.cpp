@@ -14,7 +14,7 @@
 
 const std::string emptyStr;
 
-Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0)),_connection(0)
+Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
 {
 	if(_sockd == -1)
 	{
@@ -86,7 +86,7 @@ void Client::logout()
 
 void Client::login()
 {
-	/*ignore();
+	ignore();
 
 	for(unsigned i = 0; i < 3; ++i)
 	{
@@ -98,31 +98,31 @@ void Client::login()
 		std::string password;
 		std::getline(std::cin, password);
 
-		if(loginAndChat(login, password))
+		const User user(login, "", password);
+
+		if(loginAndChat(user))
 		{
 			return;
 		}
 	}
 
-	std::cout << "Authorisation failed!" << std::endl;*/
+	std::cout << "Authorisation failed!" << std::endl;
 }
 
-bool Client::loginAndChat(std::string &login, std::string &password)
+bool Client::loginAndChat(const User &user)
 {
-	/*LoginRequest request(ptr(), login, password);
-	DataResponse<std::shared_ptr<User>> response = _server->request(request);
-
-	if(response.success())
+	if(request(user, rtype::LOGIN))
 	{
-		_user = response.data();
-		std::cout << "Welcom to the chat, " << _user->login() << "!" << std::endl;
+		_login = user.login();
+		std::cout << "Welcom to the chat, " << user.login() << "!" << std::endl;
 		chat();
 		return true;
 	}
 
-	std::cout << response.message() << std::endl;
-*/
+	std::cout << "Can not login user " << user.login() << "!" << std::endl;
+
 	return false;
+
 }
 
 void Client::registerUser()
@@ -162,7 +162,7 @@ void Client::registerUser()
 	if(success(_sockd))
 	{
 		std::cout << "You are signed up successfully." << std::endl;
-		//loginAndChat(login, password1);
+		loginAndChat(user);
 	}
 	else
 	{
@@ -223,9 +223,7 @@ void Client::start()
 	server.sin_port = htons(_port);
 	server.sin_family = AF_INET;
 
-	_connection = connect(_sockd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server));
-
-	if(_connection == -1)
+	if(connect(_sockd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server)) == -1)
 	{
 		throw NetworkException("Connection with the server failed");
 	}
@@ -251,4 +249,5 @@ void Client::start()
 	} while(comand != 'q' && comand != 'Q');
 
 	std::cout << "Bye!" << std::endl;
+	close(_sockd);
 }

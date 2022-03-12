@@ -10,11 +10,11 @@ class Client final
 	const std::string _ip;
 	const uint16_t _port;
 	const int _sockd;
-	int _connection;
+	std::string _login;
 
 	void chat();
 	void login();
-	bool loginAndChat(std::string&, std::string&);
+	bool loginAndChat(const User&);
 	void logout();
 	void registerUser();
 	bool request(const User&, const rtype);
