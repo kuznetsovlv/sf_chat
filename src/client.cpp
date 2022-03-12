@@ -177,7 +177,10 @@ bool Client::request(const User &user, const rtype type)
 	size_t size;
 	uint8_t *data = toBytes(user, size);
 	addType(data, type);
-	return send(_sockd, data, size);
+	bool success = send(_sockd, data, size);
+	delete [] data;
+
+	return success;
 }
 
 void Client::showMessages()
