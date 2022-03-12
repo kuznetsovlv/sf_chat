@@ -5,7 +5,11 @@
 #include <arpa/inet.h>
 #include "client.h"
 #include "input.h"
+#include "message.h"
 #include "networkException.h"
+#include "rtype.h"
+#include "send.h"
+#include "user.h"
 #include "utils.h"
 
 const std::string emptyStr;
@@ -123,7 +127,7 @@ bool Client::loginAndChat(std::string &login, std::string &password)
 
 void Client::registerUser()
 {
-/*	std::cout << "Enter your full name: ";
+	std::cout << "Enter your full name: ";
 	std::string fullName;
 	ignore();
 	std::getline(std::cin, fullName);
@@ -146,21 +150,34 @@ void Client::registerUser()
 	}
 	while(password1 != password2);
 
-	RegistrationRequest request(ptr(), login, fullName, password1);
+	const User user(login, fullName, password1);
 
-	Response response = _server->request(request);
+	if(!request(user, rtype::REGISTRATION))
+	{
+		std::string what = "Can not send request to register user with login " + user.login() + " and password " + user.password();
 
-	if(response.success())
+		throw NetworkException(what.c_str());
+	}
+
+	if(success(_sockd))
 	{
 		std::cout << "You are signed up successfully." << std::endl;
-		loginAndChat(login, password1);
+		//loginAndChat(login, password1);
 	}
 	else
 	{
-		std::cout << response.message() << std::endl;
+		std::cout << "Signig up failed" << std::endl;
 	}
 
-	std::cout << std::endl;*/
+	std::cout << std::endl;
+}
+
+bool Client::request(const User &user, const rtype type)
+{
+	size_t size;
+	uint8_t *data = toBytes(user, size);
+	addType(data, type);
+	return send(_sockd, data, size);
 }
 
 void Client::showMessages()
@@ -212,7 +229,7 @@ void Client::start()
 	{
 		throw NetworkException("Connection with the server failed");
 	}
-	/*std::cout << "Greetings in our chat!" << std::endl;
+	std::cout << "Greetings in our chat!" << std::endl;
 
 	char comand;
 
@@ -233,5 +250,5 @@ void Client::start()
 		}
 	} while(comand != 'q' && comand != 'Q');
 
-	std::cout << "Bye!" << std::endl;*/
+	std::cout << "Bye!" << std::endl;
 }

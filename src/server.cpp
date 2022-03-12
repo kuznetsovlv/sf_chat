@@ -13,6 +13,7 @@
 #include "networkException.h"
 #include "message.h"
 #include "messages.h"
+#include "send.h"
 #include "user.h"
 #include "utils.h"
 
@@ -333,22 +334,9 @@ void response(const int connection, const Message &message)
 {
 	size_t size;
 	uint8_t *data = toBytes(message, size);
+	addType(data, rtype::MESSAGE);
 
-	uint8_t *dataSize = new uint8_t[2 * sizeof(uint32_t)];
-	uint32_t *dataSize32 = reinterpret_cast<uint32_t*>(dataSize);
-	*dataSize = htonl(static_cast<uint32_t>(rtype::SIZE));
-	*(dataSize + 1) = htonl(static_cast<uint32_t>(size));
-	write(connection, dataSize, 2 * sizeof(uint32_t));
-	delete [] dataSize;
-
-	uint8_t buffer[sizeof(uint32_t)];
-
-	read(connection, buffer, sizeof(uint32_t));
-	if(static_cast<rtype>(ntohl(*reinterpret_cast<uint32_t*>(buffer))) == rtype::SUCCESS)
-	{
-		addType(data, rtype::MESSAGE);
-		write(connection, data, size);
-	}
+	send(connection, data, size);
 	delete [] data;
 }
 

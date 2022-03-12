@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include "message.h"
+#include "rtype.h"
+#include "user.h"
 
 class Client final
 {
@@ -14,6 +17,8 @@ class Client final
 	bool loginAndChat(std::string&, std::string&);
 	void logout();
 	void registerUser();
+	bool request(const User&, const rtype);
+	bool request(const Message&, const rtype);
 	void showMessages();
 
 	public:
