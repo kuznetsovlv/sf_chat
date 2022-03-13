@@ -62,7 +62,7 @@ void Client::chat()
 
 		const Message msg(message, _login, to);
 
-		if(!request(msg, rtype::MESSAGE))
+		if(!request(msg, rtype::MESSAGE) || !success(_sockd))
 		{
 			throw NetworkException("Sending message failed");
 		}
@@ -71,7 +71,7 @@ void Client::chat()
 
 void Client::logout()
 {
-	const uint32_t logoutType = static_cast<uint32_t>(rtype::LOGOUT);
+	const uint32_t logoutType = htonl(static_cast<uint32_t>(rtype::LOGOUT));
 	write(_sockd, &logoutType, sizeof(uint32_t));
 	uint8_t response[sizeof(uint32_t)];
 	read(_sockd, response, sizeof(uint32_t));
@@ -109,7 +109,7 @@ void Client::login()
 
 bool Client::loginAndChat(const User &user)
 {
-	if(request(user, rtype::LOGIN))
+	if(request(user, rtype::LOGIN) && success(_sockd))
 	{
 		_login = user.login();
 		std::cout << "Welcom to the chat, " << user.login() << "!" << std::endl;
@@ -175,10 +175,10 @@ bool Client::request(const User &user, const rtype type)
 	size_t size;
 	uint8_t *data = toBytes(user, size);
 	addType(data, type);
-	bool success = send(_sockd, data, size);
+	bool successSent = send(_sockd, data, size);
 	delete [] data;
 
-	return success;
+	return successSent;
 }
 
 bool Client::request(const Message &message, const rtype type)
@@ -186,15 +186,16 @@ bool Client::request(const Message &message, const rtype type)
 	size_t size;
 	uint8_t *data = toBytes(message, size);
 	addType(data, type);
-	bool success = send(_sockd, data, size);
+	bool successSent = send(_sockd, data, size);
 	delete [] data;
 
-	return success;
+	return successSent;
 }
 
 void Client::showMessages()
 {
 	const uint32_t emptyType = htonl(static_cast<uint32_t>(rtype::EMPTY));
+	const uint32_t successType = htonl(static_cast<uint32_t>(rtype::SUCCESS));
 	while(true)
 	{
 		write(_sockd, &emptyType, sizeof(uint32_t));
@@ -206,6 +207,7 @@ void Client::showMessages()
 		{
 			const size_t size = static_cast<size_t>(ntohl(*reinterpret_cast<uint32_t*>(sizeData + sizeof(uint32_t))));
 			uint8_t *data = new uint8_t[size];
+			write(_sockd, reinterpret_cast<const uint8_t*>(&successType), sizeof(uint32_t));
 			read(_sockd, data, size);
 
 			switch(getType(data))
@@ -233,13 +235,13 @@ void Client::showMessages()
 				default:
 				{
 					delete [] data;
-					throw NetworkException("Server error");
+					throw NetworkException("Server error. Message data failed.");
 				}
 			}
 		}
 		else
 		{
-			throw NetworkException("Server error");
+			throw NetworkException("Server error. Message size failed.");
 		}
 	}
 }

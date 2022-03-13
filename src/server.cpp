@@ -156,7 +156,7 @@ void session(Server &server, const int sockd)
 		{
 
 			uint8_t *buffer = new uint8_t[bufferSize];
-			read(connection, reinterpret_cast<char*>(buffer), bufferSize / sizeof(char));
+			read(connection, buffer, bufferSize);
 
 			const rtype requestType = getType(buffer);
 
@@ -342,6 +342,6 @@ void response(const int connection, const Message &message)
 
 void response(const int connection)
 {
-	uint32_t type = htonl(static_cast<uint32_t>(rtype::EMPTY));
-	write(connection, &type, sizeof(type));
+	const uint32_t type = htonl(static_cast<uint32_t>(rtype::EMPTY));
+	send(connection, reinterpret_cast<const uint8_t*>(&type), sizeof(uint32_t));
 }
