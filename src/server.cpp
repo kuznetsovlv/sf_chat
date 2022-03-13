@@ -162,6 +162,12 @@ void session(Server &server, const int sockd)
 
 			switch(requestType)
 			{
+				case rtype::CLOSE:
+				{
+					response(connection, true);
+					thread.join();
+					return;
+				}
 				case rtype::SIZE:
 				{
 					try
@@ -316,11 +322,17 @@ void session(Server &server, const int sockd)
 					break;
 				}
 				default:
+				{
 					response(connection, false);
+					thread.join();
+					break;
+				}
 			}
 
 			delete [] buffer;
 		}
+
+		thread.join();
 	}
 }
 

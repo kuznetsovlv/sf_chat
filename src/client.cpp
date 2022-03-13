@@ -73,10 +73,8 @@ void Client::logout()
 {
 	const uint32_t logoutType = htonl(static_cast<uint32_t>(rtype::LOGOUT));
 	write(_sockd, &logoutType, sizeof(uint32_t));
-	uint8_t response[sizeof(uint32_t)];
-	read(_sockd, response, sizeof(uint32_t));
 
-	if(getType(response) != rtype::SUCCESS)
+	if(!success(_sockd))
 	{
 		throw NetworkException("Server error");
 	}
