@@ -1,3 +1,4 @@
 *.o
 *.data
-chat
+chat-client
+chat-server

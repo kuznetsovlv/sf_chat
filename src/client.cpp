@@ -1,30 +1,32 @@
 #include <iostream>
-#include <memory>
 #include <string>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include "client.h"
 #include "input.h"
-#include "server.h"
-#include "serverRequest.h"
-#include "request.h"
-#include "response.h"
+#include "message.h"
+#include "networkException.h"
+#include "rtype.h"
+#include "send.h"
+#include "user.h"
+#include "utils.h"
 
 const std::string emptyStr;
 
-Client::Client(const std::shared_ptr<Server> &server)noexcept:_server(server)
+Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
 {
-	_user.reset();
+	if(_sockd == -1)
+	{
+		throw NetworkException("Creation of Socked failed");
+	}
 }
 
 void Client::chat()
 {
-	showMessages();
-
 	while(true)
 	{
-		if(_hasNewMessage)
-		{
-			showMessages();
-		}
+		showMessages();
 
 		std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
 
@@ -58,23 +60,24 @@ void Client::chat()
 			to = ALL;
 		}
 
-		Message msg(message, user(), to);
+		const Message msg(message, _login, to);
 
-		SendMessageRequest request(ptr(), msg);
-		Response response = _server->request(request);
-
-		if(!response.success())
+		if(!request(msg, rtype::MESSAGE) || !success(_sockd))
 		{
-			std::cout << response.message() << std::endl;
+			throw NetworkException("Sending message failed");
 		}
 	}
 }
 
-void Client::logout() noexcept
+void Client::logout()
 {
-	LogoutRequest request(ptr());
-	std::cout << _server->request(request).message() << std::endl;
-	_user.reset();
+	const uint32_t logoutType = htonl(static_cast<uint32_t>(rtype::LOGOUT));
+	write(_sockd, &logoutType, sizeof(uint32_t));
+
+	if(!success(_sockd))
+	{
+		throw NetworkException("Server error");
+	}
 }
 
 void Client::login()
@@ -91,7 +94,9 @@ void Client::login()
 		std::string password;
 		std::getline(std::cin, password);
 
-		if(loginAndChat(login, password))
+		const User user(login, "", password);
+
+		if(loginAndChat(user))
 		{
 			return;
 		}
@@ -100,22 +105,20 @@ void Client::login()
 	std::cout << "Authorisation failed!" << std::endl;
 }
 
-bool Client::loginAndChat(std::string &login, std::string &password)
+bool Client::loginAndChat(const User &user)
 {
-	LoginRequest request(ptr(), login, password);
-	DataResponse<std::shared_ptr<User>> response = _server->request(request);
-
-	if(response.success())
+	if(request(user, rtype::LOGIN) && success(_sockd))
 	{
-		_user = response.data();
-		std::cout << "Welcom to the chat, " << _user->login() << "!" << std::endl;
+		_login = user.login();
+		std::cout << "Welcom to the chat, " << user.login() << "!" << std::endl;
 		chat();
 		return true;
 	}
 
-	std::cout << response.message() << std::endl;
+	std::cout << "Can not login user " << user.login() << "!" << std::endl;
 
 	return false;
+
 }
 
 void Client::registerUser()
@@ -143,61 +146,115 @@ void Client::registerUser()
 	}
 	while(password1 != password2);
 
-	RegistrationRequest request(ptr(), login, fullName, password1);
+	const User user(login, fullName, password1);
 
-	Response response = _server->request(request);
+	if(!request(user, rtype::REGISTRATION))
+	{
+		std::string what = "Can not send request to register user with login " + user.login() + " and password " + user.password();
 
-	if(response.success())
+		throw NetworkException(what.c_str());
+	}
+
+	if(success(_sockd))
 	{
 		std::cout << "You are signed up successfully." << std::endl;
-		loginAndChat(login, password1);
+		loginAndChat(user);
 	}
 	else
 	{
-		std::cout << response.message() << std::endl;
+		std::cout << "Signig up failed" << std::endl;
 	}
 
 	std::cout << std::endl;
 }
 
-void Client::showMessages()noexcept
+bool Client::request(const User &user, const rtype type)
 {
-	GetMessageRequest request(ptr());
+	size_t size;
+	uint8_t *data = toBytes(user, size);
+	addType(data, type);
+	bool successSent = send(_sockd, data, size);
+	delete [] data;
+
+	return successSent;
+}
+
+bool Client::request(const Message &message, const rtype type)
+{
+	size_t size;
+	uint8_t *data = toBytes(message, size);
+	addType(data, type);
+	bool successSent = send(_sockd, data, size);
+	delete [] data;
+
+	return successSent;
+}
+
+void Client::showMessages()
+{
+	const uint32_t emptyType = htonl(static_cast<uint32_t>(rtype::EMPTY));
+	const uint32_t successType = htonl(static_cast<uint32_t>(rtype::SUCCESS));
 	while(true)
 	{
-		DataResponse<Message> response = _server->request(request);
+		write(_sockd, &emptyType, sizeof(uint32_t));
 
-		if(response.success())
+		uint8_t sizeData[2 * sizeof(uint32_t)];
+		read(_sockd, sizeData, 2 *sizeof(uint32_t));
+
+		if(getType(sizeData) == rtype::SIZE)
 		{
-			const Message message = response.data();
+			const size_t size = static_cast<size_t>(ntohl(*reinterpret_cast<uint32_t*>(sizeData + sizeof(uint32_t))));
+			uint8_t *data = new uint8_t[size];
+			write(_sockd, reinterpret_cast<const uint8_t*>(&successType), sizeof(uint32_t));
+			read(_sockd, data, size);
 
-			if(!message.empty())
+			switch(getType(data))
 			{
-				std::cout << std::endl;
-				std::cout << (message.from() == user() ? "Me" : message.from()) << " (" << message.date() << "):" << std::endl;
-
-				if(message.to() != ALL)
+				case rtype::EMPTY:
 				{
-					std::cout << "@" << message.to() << ": ";
+					delete [] data;
+					return;
 				}
+				case rtype::MESSAGE:
+				{
+					std::shared_ptr<Message> message = bytesToMessage(data);
+					std::cout << std::endl;
+					std::cout << (message->from() == _login ? "Me" : message->from()) << " (" << message->date() << "):" << std::endl;
+					if(message->to() != ALL)
+					{
+						std::cout << "@" << message->to() << ": ";
+					}
 
-				std::cout << message.msg() << std::endl << std::endl;
-			}
-			else
-			{
-				_hasNewMessage = false;
-				return;
+					std::cout << message->msg() << std::endl << std::endl;
+
+					delete [] data;
+					break;
+				}
+				default:
+				{
+					delete [] data;
+					throw NetworkException("Server error. Message data failed.");
+				}
 			}
 		}
 		else
 		{
-			std::cout << response.message() << std::endl;
+			throw NetworkException("Server error. Message size failed.");
 		}
 	}
 }
 
 void Client::start()
 {
+	struct sockaddr_in server;
+	server.sin_addr.s_addr = inet_addr(_ip.c_str());
+	server.sin_port = htons(_port);
+	server.sin_family = AF_INET;
+
+	if(connect(_sockd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server)) == -1)
+	{
+		throw NetworkException("Connection with the server failed");
+	}
 	std::cout << "Greetings in our chat!" << std::endl;
 
 	char comand;
@@ -220,27 +277,5 @@ void Client::start()
 	} while(comand != 'q' && comand != 'Q');
 
 	std::cout << "Bye!" << std::endl;
-}
-
-std::shared_ptr<Client> Client::ptr()noexcept
-{
-	try
-	{
-		return shared_from_this();
-	}
-	catch(std::bad_weak_ptr &error)
-	{
-		std::shared_ptr<Client> ptr(this);
-		return ptr;
-	}
-}
-
-void Client::request(NewMessageServerRequest &request)noexcept
-{
-	_hasNewMessage = true;
-}
-
-const std::string &Client::user()const noexcept
-{
-	return _user ? _user->login() : emptyStr;
+	close(_sockd);
 }

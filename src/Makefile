@@ -1,35 +1,38 @@
 #Makefile
-objects = main.o client.o cripto.o file.o input.o message.o messages.o response.o request.o server.o serverRequest.o user.o users.o utils.o
+common = message.o networkException.o send.o user.o utils.o
+client_objects = chat-client.o client.o input.o ${common}
+server_objects = chat-server.o cripto.o file.o messages.o users.o server.o ${common}
 standard = c++17
 
 .PHONY: all
-all: chat
+all: chat-client chat-server
 
-chat: ${objects}
-	gcc -o chat ${objects} -lstdc++
+chat-client: ${client_objects}
+	gcc -o chat-client ${client_objects} -lstdc++
+chat-server: ${server_objects}
+	gcc -o chat-server ${server_objects} -lstdc++ -std=${standard} -pthread
 
-main.o: main.cpp client.h request.h server.h user.h users.h
-	gcc -o main.o main.cpp -c -std=${standard}
-client.o: client.h client.cpp dataResponse.h dataResponse.cpp input.h message.h request.h response.h server.h serverRequest.h user.h
-	gcc -o client.o client.cpp -c -std=${standard}
+chat-client.o: client.h utils.h
+chat-server.o: chat-server.cpp server.h utils.h
+	gcc -o chat-server.o chat-server.cpp -c -std=${standard}
+
+client.o: client.h client.cpp input.h networkException.h message.h rtype.h send.h user.h utils.h
 cripto.o: cripto.h
-file.o: file.cpp file.h
+file.o: file.h file.cpp
 	gcc -o file.o file.cpp -c -std=${standard}
 input.o: input.h
+networkException.o: networkException.h
 message.o: message.h user.h
-messages.o: messages.cpp messages.h file.h message.h utils.h
+messages.o: messages.h messages.cpp file.h message.h utils.h
 	gcc -o messages.o messages.cpp -c -std=${standard}
-response.o: response.h
-request.o: request.h request.cpp client.h message.h
-	gcc -o request.o request.cpp -c -std=${standard}
-server.o: server.h server.cpp client.h dataResponse.h dataResponse.cpp file.h message.h messages.h request.h response.h serverRequest.h user.h users.h
+send.o: send.h rtype.h
+server.o: server.h server.cpp file.h networkException.h message.h messages.h rtype.h send.h user.h users.h utils.h
 	gcc -o server.o server.cpp -c -std=${standard}
-serverRequest.o: serverRequest.h
 user.o: user.h
-users.o: users.cpp users.h user.h utils.h
+users.o: users.h users.cpp cripto.h file.h user.h utils.h
 	gcc -o users.o users.cpp -c -std=${standard}
-utils.o: utils.h
+utils.o: utils.h message.h rtype.h user.h
 
 .PHONY: clean
 clean:
-	-rm -f chat *.o *.data 2>/dev/null
+	-rm -f chat-client chat-server *.o *.data 2>/dev/null
