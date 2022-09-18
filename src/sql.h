@@ -30,7 +30,7 @@ class SQL final
 	SQL(SQL&&)noexcept;
 	~SQL();
 
-	SQL operator=(SQL&) = delete;
+	SQL &operator=(SQL&) = delete;
 	SQL &operator=(SQL&&)noexcept;
 
 	friend SQLBuilder;
