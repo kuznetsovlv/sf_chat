@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <arpa/inet.h>
+#include "memoryAllocationException.h"
 #include "message.h"
 #include "rtype.h"
 #include "user.h"
@@ -127,4 +128,20 @@ void addType(uint8_t *data, const rtype type)
 const rtype getType(const uint8_t *data)
 {
 	return static_cast<rtype>(ntohl(*reinterpret_cast<const uint32_t*>(data)));
+}
+
+char *str2char(const std::string& str)
+{
+	char *res = new char[str.size() + 1];
+
+	if(res)
+	{
+		strcpy(res, str.c_str());
+	}
+	else
+	{
+		throw MemoryAllocationException();
+	}
+
+	return res;
 }
