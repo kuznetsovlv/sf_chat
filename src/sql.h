@@ -2,6 +2,7 @@
 #include <string>
 #include <exception>
 #include <mysql/mysql.h>
+#include "user.h"
 
 #define DB_DEFAULT_HOST "localhost"
 
@@ -24,7 +25,7 @@ class SQL final
 
 	explicit SQL(MYSQL*)noexcept;
 
-	const MYSQL_RES* query(const std::string&);
+	MYSQL_RES* query(const std::string&)const;
 
 	public:
 	SQL()noexcept;
@@ -34,6 +35,9 @@ class SQL final
 
 	SQL &operator=(SQL&) = delete;
 	SQL &operator=(SQL&&)noexcept;
+
+	bool userExists(User&)const;
+	bool userExists(const std::string&)const;
 
 	friend SQLBuilder;
 };

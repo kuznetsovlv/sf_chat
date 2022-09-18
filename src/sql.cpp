@@ -2,6 +2,7 @@
 #include <cstring>
 #include <mysql/mysql.h>
 #include "sql.h"
+#include "user.h"
 #include "utils.h"
 
 DBException::DBException(const std::string& what)noexcept:_what(what){}
@@ -29,7 +30,7 @@ SQL::~SQL()
 	}
 }
 
-const MYSQL_RES* SQL::query(const std::string& queryStr)
+MYSQL_RES* SQL::query(const std::string& queryStr)const
 {
 	if(mysql_query(_mysql, queryStr.c_str()))
 	{
@@ -37,6 +38,16 @@ const MYSQL_RES* SQL::query(const std::string& queryStr)
 	}
 
 	return mysql_store_result(_mysql);
+}
+
+bool SQL::userExists(User &user)const
+{
+	return userExists(user.login());
+}
+
+bool SQL::userExists(const std::string &login)const
+{
+	return !!mysql_fetch_row(query("select login from users where login like " + login));
 }
 
 SQL &SQL::operator=(SQL &&that)noexcept
@@ -106,6 +117,8 @@ SQL SQLBuilder::build()const
 	{
 		throw DBException(std::string("Connection failed: '") + std::string(mysql_error(mysql)) + std::string(","));
 	}
+
+	mysql_set_character_set(mysql, "utf8");
 
 	return SQL(mysql);
 }
