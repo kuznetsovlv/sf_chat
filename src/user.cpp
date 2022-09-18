@@ -5,7 +5,7 @@
 
 const std::string ALL = "_ALL_";
 
-User::User()noexcept:User(ALL, "", "")
+User::User()noexcept:User(ALL, ALL, "")
 {
 }
 
