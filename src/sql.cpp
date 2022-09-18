@@ -47,7 +47,7 @@ SQL &SQL::operator=(SQL &&that)noexcept
 	return *this;
 }
 
-SQLBuilder::SQLBuilder()noexcept:_host(nullptr),_userName(nullptr),_password(nullptr),_db(nullptr),_port(0),_socket(nullptr),_flag(0){}
+SQLBuilder::SQLBuilder()noexcept:_host(str2char(DB_DEFAULT_HOST)),_userName(nullptr),_password(nullptr),_db(nullptr),_port(0),_socket(nullptr),_flag(0){}
 
 SQLBuilder::~SQLBuilder()noexcept
 {

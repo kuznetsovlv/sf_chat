@@ -3,6 +3,8 @@
 #include <exception>
 #include <mysql/mysql.h>
 
+#define DB_DEFAULT_HOST "localhost"
+
 class DBException final: public std::exception
 {
 	const std::string _what;

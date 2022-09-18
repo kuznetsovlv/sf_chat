@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include "config.h"
 #include "server.h"
 #include "client.h"
 #include "networkException.h"
