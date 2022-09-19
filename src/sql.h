@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
 #include <exception>
+#include <memory>
 #include <mysql/mysql.h>
+#include "message.h"
 #include "user.h"
 
 #define DB_DEFAULT_HOST "localhost"
@@ -36,8 +38,12 @@ class SQL final
 	SQL &operator=(SQL&) = delete;
 	SQL &operator=(SQL&&)noexcept;
 
-	bool userExists(User&)const;
+	bool userExists(const User&)const;
 	bool userExists(const std::string&)const;
+	void saveUser(const User&)const;
+	bool validateUser(const User&)const;
+	void addMessage(const Message&)const;
+	std::shared_ptr<Message>getMessage(const unsigned, const std::string)const;
 
 	friend SQLBuilder;
 };

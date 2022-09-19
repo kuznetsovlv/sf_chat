@@ -1,9 +1,14 @@
 #include <string>
 #include <cstring>
+#include <memory>
 #include <mysql/mysql.h>
+#include "cripto.h"
+#include "message.h"
 #include "sql.h"
 #include "user.h"
 #include "utils.h"
+
+const char PASSWORD_DELIMETER = ':';
 
 DBException::DBException(const std::string& what)noexcept:_what(what){}
 
@@ -40,7 +45,7 @@ MYSQL_RES* SQL::query(const std::string& queryStr)const
 	return mysql_store_result(_mysql);
 }
 
-bool SQL::userExists(User &user)const
+bool SQL::userExists(const User &user)const
 {
 	return userExists(user.login());
 }
@@ -49,6 +54,51 @@ bool SQL::userExists(const std::string &login)const
 {
 	return !!mysql_fetch_row(query("select login from users where login like " + login));
 }
+
+void SQL::saveUser(const User &user)const
+{
+
+	std::string saltStr, sha1;
+
+	salt(saltStr);
+	sha1String(saltStr + user.password(), sha1);
+
+	sha1 = saltStr + PASSWORD_DELIMETER + sha1;
+
+	if(userExists(user))
+	{
+		query("update users set full_name = '" + user.fullName() + "', sha1 = '" + sha1 + "' where login like '" + user.login() + "'");
+	}
+	else
+	{
+		query("insert into users(id, login, full_name, sha1) values(default, '" + user.login() + "', '" + user.fullName() + "', '" + sha1 + "'");
+	}
+}
+
+bool SQL::validateUser(const User &user)const
+{
+	MYSQL_ROW row = mysql_fetch_row(query("select sha1 from users where login like '" + user.login() + "'"));
+
+	if(row)
+	{
+		std::string sha1 = row[0];
+		std::string buffer[2];
+		split(buffer, 2, PASSWORD_DELIMETER, sha1);
+
+		std::string currentSha1;
+		sha1String(buffer[0] + user.password(), currentSha1);
+
+		return currentSha1 == buffer[1];
+	}
+
+	return false;
+}
+
+void SQL::addMessage(const Message &message)const
+{
+	query("insert into messages(id, from_user_id, to_user_id, text, date) values(default, select id from users where login like '" + message.from() + "', select id from users where login like '" + message.to() + "', '" + message.msg() + "', default)");
+}
+
 
 SQL &SQL::operator=(SQL &&that)noexcept
 {

@@ -29,7 +29,7 @@ messages.o: messages.h messages.cpp file.h message.h utils.h
 send.o: send.h rtype.h
 server.o: server.h server.cpp config.h file.h networkException.h message.h messages.h rtype.h send.h sql.h user.h users.h utils.h
 	gcc -o server.o server.cpp -c -std=${standard}
-sql.o: sql.h sql.cpp utils.h
+sql.o: sql.h sql.cpp cripto.h message.h user.h utils.h
 	gcc -o sql.o sql.cpp -c -std=${standard}
 user.o: user.h
 users.o: users.h users.cpp cripto.h file.h user.h utils.h
