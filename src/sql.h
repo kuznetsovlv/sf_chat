@@ -8,7 +8,7 @@
 
 #define DB_DEFAULT_HOST "localhost"
 
-class DBException final: public std::exception
+class DBException: public std::exception
 {
 	const std::string _what;
 
@@ -18,12 +18,20 @@ class DBException final: public std::exception
 	virtual const char *what()const noexcept override;
 };
 
+class DBExceptionSoft final: public DBException
+{
+	public:
+	explicit DBExceptionSoft(const std::string&)noexcept;
+};
+
 class SQLBuilder;
 
 class SQL final
 {
 	private:
 	MYSQL *_mysql;
+	int32_t _allId;
+	std::string _strAllId;
 
 	explicit SQL(MYSQL*)noexcept;
 
@@ -38,12 +46,14 @@ class SQL final
 	SQL &operator=(SQL&) = delete;
 	SQL &operator=(SQL&&)noexcept;
 
+	int32_t getUserId(const std::string&)const;
+	bool getLoginById(std::string&, const uint32_t)const;
 	bool userExists(const User&)const;
 	bool userExists(const std::string&)const;
 	void saveUser(const User&)const;
 	bool validateUser(const User&)const;
 	void addMessage(const Message&)const;
-	std::shared_ptr<Message>getMessage(const unsigned, const std::string)const;
+	std::shared_ptr<Message>getMessage(const uint32_t, const std::string&)const;
 
 	friend SQLBuilder;
 };
@@ -73,4 +83,3 @@ class SQLBuilder final
 
 	SQL build()const;
 };
-

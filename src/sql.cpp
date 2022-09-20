@@ -1,4 +1,5 @@
 #include <string>
+#include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <mysql/mysql.h>
@@ -10,20 +11,34 @@
 
 const char PASSWORD_DELIMETER = ':';
 
-DBException::DBException(const std::string& what)noexcept:_what(what){}
+DBException::DBException(const std::string &what)noexcept:_what(what){}
 
 const char *DBException::what()const noexcept
 {
 	return _what.c_str();
 }
 
+DBExceptionSoft::DBExceptionSoft(const std::string &what)noexcept:DBException(what){};
+
 SQL::SQL()noexcept:SQL(nullptr){}
 
-SQL::SQL(MYSQL *mysql)noexcept:_mysql(mysql){}
+SQL::SQL(MYSQL *mysql)noexcept:_mysql(mysql)
+{
+	if(userExists(ALL))
+	{
+		User all;
+		saveUser(all);
+	}
+
+	_allId = getUserId(ALL);
+	_strAllId = std::to_string(_allId);
+}
 
 SQL::SQL(SQL &&that)noexcept
 {
 	_mysql = that._mysql;
+	_allId = that._allId;
+	_strAllId = that._strAllId;
 	that._mysql = nullptr;
 }
 
@@ -45,6 +60,26 @@ MYSQL_RES* SQL::query(const std::string& queryStr)const
 	return mysql_store_result(_mysql);
 }
 
+int32_t SQL::getUserId(const std::string &login)const
+{
+	MYSQL_ROW row = mysql_fetch_row(query("select id from users where login like '" + login + "'"));
+
+	return row ? atoi(row[0]) : -1;
+}
+
+bool SQL::getLoginById(std::string &login, const uint32_t id)const
+{
+	MYSQL_ROW row = mysql_fetch_row(query("select login from users where id = " + std::to_string(id)));
+
+	if(!row)
+	{
+		return false;
+	}
+
+	login = row[0];
+	return true;
+}
+
 bool SQL::userExists(const User &user)const
 {
 	return userExists(user.login());
@@ -52,7 +87,7 @@ bool SQL::userExists(const User &user)const
 
 bool SQL::userExists(const std::string &login)const
 {
-	return !!mysql_fetch_row(query("select login from users where login like " + login));
+	return !!mysql_fetch_row(query("select login from users where login like '" + login + "'"));
 }
 
 void SQL::saveUser(const User &user)const
@@ -96,13 +131,49 @@ bool SQL::validateUser(const User &user)const
 
 void SQL::addMessage(const Message &message)const
 {
-	query("insert into messages(id, from_user_id, to_user_id, text, date) values(default, select id from users where login like '" + message.from() + "', select id from users where login like '" + message.to() + "', '" + message.msg() + "', default)");
+	const uint32_t fromId = getUserId(message.from());
+
+	if(fromId < 0)
+	{
+		throw DBExceptionSoft("Incorrect sender '" + message.from() + "'");
+	}
+
+	uint32_t toId = getUserId(message.to());
+
+	if(toId < 0)
+	{
+		toId = _allId;
+	}
+
+	query("insert into messages(id, from_user_id, to_user_id, text, date) values(default, " + std::to_string(fromId) + ", " + std::to_string(toId) + ", '" + message.msg() + "', default)");
 }
 
+std::shared_ptr<Message>SQL::getMessage(const uint32_t lastId, const std::string &login)const
+{
+	const int32_t userId = getUserId(login);
+
+	if(userId < 0)
+	{
+		throw DBExceptionSoft("Incorrect recipient '" + login + "'");
+	}
+
+	std::string strUserId = std::to_string(userId);
+
+	MYSQL_ROW row = mysql_fetch_row(query("id, from_user_id, to_user_id, text, data from messages where id > " + std::to_string(lastId) + " and (from_user_id = " + strUserId + " or to_user_id in (" + strUserId + ", " + _strAllId + ")) limit 1"));
+
+	if(!row)
+	{
+		return nullptr;
+	}
+
+	return std::make_shared<Message>();
+}
 
 SQL &SQL::operator=(SQL &&that)noexcept
 {
 	_mysql = that._mysql;
+	_allId = that._allId;
+	_strAllId = that._strAllId;
 	that._mysql = nullptr;
 
 	return *this;
