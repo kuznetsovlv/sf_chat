@@ -159,14 +159,14 @@ std::shared_ptr<Message>SQL::getMessage(const uint32_t lastId, const std::string
 
 	std::string strUserId = std::to_string(userId);
 
-	MYSQL_ROW row = mysql_fetch_row(query("id, from_user_id, to_user_id, text, data from messages where id > " + std::to_string(lastId) + " and (from_user_id = " + strUserId + " or to_user_id in (" + strUserId + ", " + _strAllId + ")) limit 1"));
+	MYSQL_ROW row = mysql_fetch_row(query("text, from_user_id, to_user_id, data, id from messages where id > " + std::to_string(lastId) + " and (from_user_id = " + strUserId + " or to_user_id in (" + strUserId + ", " + _strAllId + ")) limit 1"));
 
 	if(!row)
 	{
 		return nullptr;
 	}
 
-	return std::make_shared<Message>();
+	return std::make_shared<Message>(row[0], row[1], row[2], row[3], atoi(row[4]));
 }
 
 SQL &SQL::operator=(SQL &&that)noexcept

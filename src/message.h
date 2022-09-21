@@ -8,12 +8,14 @@ class Message final
 	const std::string _from;
 	const std::string _to;
 	const std::string _date;
+	const uint32_t _id;
 	const bool _empty;
 
 	public:
 	Message()noexcept;
 	Message(const std::string&, const std::string&, const std::string&)noexcept;
 	Message(const std::string&, const std::string&, const std::string&, const std::string&)noexcept;
+	Message(const std::string&, const std::string&, const std::string&, const std::string&, const uint32_t)noexcept;
 
 	const std::string &from()const noexcept;
 	const std::string &to()const noexcept;
