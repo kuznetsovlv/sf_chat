@@ -20,7 +20,7 @@ const char *DBException::what()const noexcept
 
 DBExceptionSoft::DBExceptionSoft(const std::string &what)noexcept:DBException(what){};
 
-SQL::SQL()noexcept:SQL(nullptr){}
+SQL::SQL()noexcept:_mysql(nullptr){}
 
 SQL::SQL(MYSQL *mysql)noexcept:_mysql(mysql)
 {
