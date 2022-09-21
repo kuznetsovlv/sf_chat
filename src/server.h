@@ -5,9 +5,8 @@
 #include <unordered_map>
 #include <vector>
 #include "message.h"
-#include "messages.h"
+#include "sql.h"
 #include "user.h"
-#include "users.h"
 
 class Server;
 void session(Server&, const int);
@@ -19,21 +18,13 @@ void response(const int);
 class Server final
 {
 	private:
-	Users _users;
-	// Messages
-	Messages _messages;
-	std::unordered_map<std::thread::id, size_t> _sendFrom;
 	// Connected clients
 	std::unordered_map<std::thread::id, std::string> _clients;
+	SQL _sql;
 
-	bool hasUser(const std::string&);
-	void createUser(const std::string&, const std::string&, const std::string&);
-	void saveMessage(const Message&);
 	void subscribe(const std::thread::id, const std::string&);
 	void unsubscribe(const std::thread::id);
-	bool subscribed(std::thread::id)const noexcept;
-	const std::shared_ptr<Message> message(const std::thread::id);
-	bool validate(const User&);
+	bool subscribed(const std::thread::id)const noexcept;
 
 	public:
 	Server();

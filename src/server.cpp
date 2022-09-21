@@ -13,8 +13,8 @@
 #include "client.h"
 #include "networkException.h"
 #include "message.h"
-#include "messages.h"
 #include "send.h"
+#include "sql.h"
 #include "user.h"
 #include "utils.h"
 
@@ -22,33 +22,17 @@ std::mutex serverMutex;
 
 Server::Server()
 {
-	User all;
-	if(!_users.exists(all))
-	{
-		_users.add(all);
-	}
-}
-
-bool Server::hasUser(const std::string &login)
-{
-	return _users.exists(login);
-}
-
-void Server::createUser(const std::string &login, const std::string &fullName, const std::string &password)
-{
-	User user(login, fullName, password);
-	_users.add(user);
-}
-
-void Server::saveMessage(const Message &message)
-{
-	_messages.save(message);
+	SQLBuilder builder;
+	builder.withHost("localhost");
+	builder.withUserName("sfchat");
+	builder.withPassword("sfchatpassword");
+	builder.withDataBase("sfchatdb");
+	_sql = builder.build();
 }
 
 void Server::subscribe(const std::thread::id clientId, const std::string &login)
 {
 	_clients.insert({clientId, login});
-	_sendFrom[clientId] = 0;
 }
 
 void Server::unsubscribe(const std::thread::id clientId)
@@ -58,14 +42,7 @@ void Server::unsubscribe(const std::thread::id clientId)
 		if(it->first == clientId)
 		{
 			_clients.erase(it);
-			for(auto sit = _sendFrom.begin(); sit != _sendFrom.end();++sit)
-			{
-				if(sit->first == clientId)
-				{
-					_sendFrom.erase(sit);
-					return;
-				}
-			}
+			return;
 		}
 	}
 }
@@ -73,27 +50,6 @@ void Server::unsubscribe(const std::thread::id clientId)
 bool Server::subscribed(const std::thread::id clientId)const noexcept
 {
 	return _clients.find(clientId) != _clients.end();
-}
-
-const std::shared_ptr<Message> Server::message(const std::thread::id clientId)
-{
-	if(subscribed(clientId))
-	{
-		size_t count = 0;
-		_messages.seek(_sendFrom[clientId]);
-		std::shared_ptr<Message> message;
-
-		while(message = _messages.next())
-		{
-			if(message->to() == ALL || message->to() == _clients[clientId] || message->from() == _clients[clientId])
-			{
-				_sendFrom[clientId] = _messages.position();
-				return message;
-			}
-		}
-	}
-
-	return nullptr;
 }
 
 void Server::run(const uint16_t port)
@@ -133,11 +89,6 @@ void Server::run(const uint16_t port)
 	close(sockd);
 }
 
-bool Server::validate(const User &user)
-{
-	return _users.validate(user);
-}
-
 void session(Server &server, const int sockd)
 {
 	std::unique_lock<std::mutex> guard(serverMutex, std::defer_lock);
@@ -151,6 +102,8 @@ void session(Server &server, const int sockd)
 	if(connection != -1)
 	{
 		std::thread thread(session, std::ref(server), sockd);
+		uint32_t lastMessageId = 0;
+		std::shared_ptr<User> currentUser = nullptr;
 
 		size_t bufferSize = 8 * (sizeof(uint32_t) + sizeof(uint32_t));
 		while(true)
@@ -185,9 +138,9 @@ void session(Server &server, const int sockd)
 						bool success = false;
 						guard.lock();
 						locked = true;
-						if(!server.hasUser(user->login()))
+						if(!server._sql.userExists(*user))
 						{
-							server.createUser(user->login(), user->fullName(), user->password());
+							server._sql.saveUser(*user);
 							success = true;
 						}
 						guard.unlock();
@@ -212,10 +165,11 @@ void session(Server &server, const int sockd)
 						std::shared_ptr<User> user = bytesToUser(buffer);
 						guard.lock();
 						locked = true;
-						const bool success = server.validate(*user);
+						const bool success = server._sql.validateUser(*user);
 						if(success)
 						{
-							server.subscribe(id, user->login());
+							currentUser = user;
+							server.subscribe(id, currentUser->login());
 						}
 						guard.unlock();
 						locked = false;
@@ -234,6 +188,7 @@ void session(Server &server, const int sockd)
 				case rtype::LOGOUT:
 				{
 					bool locked = false;
+					currentUser = nullptr;
 					try
 					{
 						guard.lock();
@@ -264,7 +219,7 @@ void session(Server &server, const int sockd)
 						const std::shared_ptr<Message> message = bytesToMessage(buffer);
 						guard.lock();
 						locked = true;
-						server.saveMessage(*message);
+						server._sql.addMessage(*message);
 						guard.unlock();
 						locked = false;
 						response(connection, true);
@@ -293,7 +248,7 @@ void session(Server &server, const int sockd)
 							response(connection, false);
 							break;
 						}
-						const std::shared_ptr<Message> message = server.message(id);
+						const std::shared_ptr<Message> message = server._sql.getMessage(lastMessageId, currentUser->login());
 						guard.unlock();
 						locked = false;
 
