@@ -68,7 +68,7 @@ void Server::run(const uint16_t port)
 
 	int bindStatus = bind(sockd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
 
-	if(bindStatus ==-1)
+	if(bindStatus == -1)
 	{
 		close(sockd);
 		throw NetworkException("Socket binding failed");
