@@ -24,7 +24,7 @@ SQL::SQL()noexcept:_mysql(nullptr){}
 
 SQL::SQL(MYSQL *mysql)noexcept:_mysql(mysql)
 {
-	if(userExists(ALL))
+	if(!userExists(ALL))
 	{
 		User all;
 		saveUser(all);
@@ -102,11 +102,11 @@ void SQL::saveUser(const User &user)const
 
 	if(userExists(user))
 	{
-		query("update users set full_name = '" + user.fullName() + "', sha1 = '" + sha1 + "' where login like '" + user.login() + "'");
+		query("update users set full_name = '" + user.fullName() + "', sha1 = '" + sha1 + "' where login like '" + user.login() + "')");
 	}
 	else
 	{
-		query("insert into users(id, login, full_name, sha1) values(default, '" + user.login() + "', '" + user.fullName() + "', '" + sha1 + "'");
+		query("insert into users(id, login, full_name, sha1) values(default, '" + user.login() + "', '" + user.fullName() + "', '" + sha1 + "')");
 	}
 }
 
@@ -159,7 +159,7 @@ std::shared_ptr<Message>SQL::getMessage(const uint32_t lastId, const std::string
 
 	std::string strUserId = std::to_string(userId);
 
-	MYSQL_ROW row = mysql_fetch_row(query("text, from_user_id, to_user_id, data, id from messages where id > " + std::to_string(lastId) + " and (from_user_id = " + strUserId + " or to_user_id in (" + strUserId + ", " + _strAllId + ")) limit 1"));
+	MYSQL_ROW row = mysql_fetch_row(query("select text, from_user_id, to_user_id, date, id from messages where id > " + std::to_string(lastId) + " and (from_user_id = " + strUserId + " or to_user_id in (" + strUserId + ", " + _strAllId + ")) limit 1"));
 
 	if(!row)
 	{
