@@ -31,7 +31,10 @@ void Client::chat()
 		std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
 
 		std::string message;
-		std::getline(std::cin, message);
+		while(message.empty())
+		{
+			std::getline(std::cin, message);
+		}
 
 		if(message == "!quit")
 		{
