@@ -23,10 +23,10 @@ std::mutex serverMutex;
 Server::Server()
 {
 	SQLBuilder builder;
-	builder.withHost("localhost");
-	builder.withUserName("sfchat");
-	builder.withPassword("sfchatpassword");
-	builder.withDataBase("sfchatdb");
+	builder.withHost(DB_HOST);
+	builder.withUserName(DB_USER);
+	builder.withPassword(DB_PASSWORD);
+	builder.withDataBase(DB_NAME);
 	_sql = builder.build();
 }
 
