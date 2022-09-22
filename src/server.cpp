@@ -173,6 +173,7 @@ void session(Server &server, const int sockd)
 						}
 						guard.unlock();
 						locked = false;
+						lastMessageId = 0;
 						response(connection, success);
 					}
 					catch(...)
@@ -189,6 +190,7 @@ void session(Server &server, const int sockd)
 				{
 					bool locked = false;
 					currentUser = nullptr;
+					lastMessageId = 0;
 					try
 					{
 						guard.lock();
@@ -255,6 +257,7 @@ void session(Server &server, const int sockd)
 						if(message)
 						{
 							response(connection, *message);
+							lastMessageId = message->id();
 						}
 						else
 						{

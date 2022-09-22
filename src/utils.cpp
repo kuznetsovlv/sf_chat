@@ -43,7 +43,7 @@ void join(const std::string *strs, const size_t count, const char delimeter, std
 
 uint8_t *toBytes(const Message &message, size_t &size)
 {
-	size = sizeof(uint32_t) + (message.from().size() + message.to().size() + message.msg().size() + message.date().size() + 4) * sizeof(char);
+	size = sizeof(uint32_t) * 2 + (message.from().size() + message.to().size() + message.msg().size() + message.date().size() + 4) * sizeof(char);
 
 	uint8_t *data = new uint8_t[size];
 
@@ -60,6 +60,11 @@ uint8_t *toBytes(const Message &message, size_t &size)
 
 	p += (message.msg().size() + 1) * sizeof(char);
 	strcpy(reinterpret_cast<char*>(p), message.date().c_str());
+
+	p += (message.date().size() + 1) * sizeof(char);
+
+	uint32_t *msgId = reinterpret_cast<uint32_t*>(p);
+	*msgId = message.id();
 
 
 	return data;
@@ -100,7 +105,10 @@ std::shared_ptr<Message> bytesToMessage(const uint8_t *data)
 	p += msg.size() + 1;
 	const std::string date = std::string(p);
 
-	return std::make_shared<Message>(msg, from, to, date);
+	p += date.size() + 1;
+	const uint32_t id = *(reinterpret_cast<const uint32_t*>(p));
+
+	return std::make_shared<Message>(msg, from, to, date, id);
 }
 
 std::shared_ptr<User> bytesToUser(const uint8_t *data)

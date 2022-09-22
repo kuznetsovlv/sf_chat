@@ -30,6 +30,11 @@ const std::string &Message::date()const noexcept
 	return _date;
 }
 
+const uint32_t Message::id()const noexcept
+{
+	return _id;
+}
+
 bool Message::empty()const noexcept
 {
 	return _empty;

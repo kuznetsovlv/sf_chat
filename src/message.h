@@ -21,5 +21,6 @@ class Message final
 	const std::string &to()const noexcept;
 	const std::string &msg()const noexcept;
 	const std::string &date()const noexcept;
+	const uint32_t id()const noexcept;
 	bool empty()const noexcept;
 };
