@@ -13,6 +13,8 @@
 #include "utils.h"
 
 const std::string emptyStr;
+const size_t MAX_LOGIN_LENGTH = 254;
+const size_t MAX_MESSAGE_LENGTH = 1022;
 
 Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
 {
@@ -31,7 +33,10 @@ void Client::chat()
 		std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
 
 		std::string message;
-		std::getline(std::cin, message);
+		while(message.empty())
+		{
+			std::getline(std::cin, message);
+		}
 
 		if(message == "!quit")
 		{
@@ -60,11 +65,25 @@ void Client::chat()
 			to = ALL;
 		}
 
-		const Message msg(message, _login, to);
-
-		if(!request(msg, rtype::MESSAGE) || !success(_sockd))
+		while(!message.empty())
 		{
-			throw NetworkException("Sending message failed");
+			const std::string first = message.substr(0, MAX_MESSAGE_LENGTH);
+
+			const Message msg(first, _login, to);
+
+			if(!request(msg, rtype::MESSAGE) || !success(_sockd))
+			{
+				throw NetworkException("Sending message failed");
+			}
+
+			if(message.size() > MAX_MESSAGE_LENGTH)
+			{
+				message.erase(0, MAX_MESSAGE_LENGTH);
+			}
+			else
+			{
+				message.clear();
+			}
 		}
 	}
 }
@@ -123,15 +142,19 @@ bool Client::loginAndChat(const User &user)
 
 void Client::registerUser()
 {
-	std::cout << "Enter your full name: ";
+	std::cout << "Enter your full name (no more than " + std::to_string(MAX_LOGIN_LENGTH) + " chatracters): ";
 	std::string fullName;
 	ignore();
 	std::getline(std::cin, fullName);
+
+	cutTo(fullName, MAX_LOGIN_LENGTH);
+
 	std::string login;
 	do
 	{
-		std::cout << "Enter your login (can not contain '@', ':' or any space characters): ";
+		std::cout << "Enter your login (no more than " + std::to_string(MAX_LOGIN_LENGTH) + " chatracters, can not contain '@', ':' or any space characters): ";
 		std::getline(std::cin, login);
+		cutTo(login, MAX_LOGIN_LENGTH);
 	}while(!isLogin(login));
 
 	std::string password1, password2;

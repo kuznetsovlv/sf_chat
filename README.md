@@ -1,26 +1,27 @@
 # sf_chat
 First test project for Skillfactory course of C++
 
-## Разработчики:
+The simple network chat.
 
-- Кузнецов Леонид.
+## Developers:
 
-## Решения:
-В данной версии в приложении реализовано сетевое взаимодействие. Приложение разбито на две части: клиент (основу сотавляет класс Client) и сервер (основа - класс Server). Клиентская и серверная части написаны написаны под Linux, последние события (сейчас 13 марта 2022) меня сильно выбили из колеи, и самостоятельно разбираться с кросплатформенностью у меня попросту нет сил, поэтому все писалось под Linux, поэтой же причине не были реализованы изначально задумывавшийся (но необязательный по заданию функционал), как то:
+- Kuznetsov Leonid.
 
-1. Многопоточность в клиенте с целью возможности независимо отправлять сообщения и получать новые с сервера.
-2. Ограничение ввода или возможность передачи и получения сообщений неограниченного размера.
+## Solution:
+Now realised network client-server connection. Added connection to MySQL data base. The app consists of two parts: client (chat-client, based on Client class) and server (chat-server, based on Server class). Both parts have been written for Linux OS.
 
-В тоже время, для серверной части мне пришлось реализовать многопоточность, чтобы сервер мог одновременно взаимодействовать с несколькими клиентами, однако, поскольку многопоточность мы не проходили, мне пришлось самостоятельно с ней разбираться, и реализована она, надо полагать, весьма криво и неэффективно.... Надеюсь, в будущем я смогу исправить эти недоработки.
+## Classes:
+1. class Client - base of the client part app is used to communication with server.
+2. class Server - base of the server part, here is a base functionality: communication with differen service to save user's and message's data and to provide messages to clients.
+3. class User - information about user.
+4. class Message - information about message.
+5. class SQL - provides interraction between the app and MySQL database.
 
-## Используемые типы:
-1. class Client - предоставляет пользовательский интерфейс и обеспечивает взаимодействие пользователя с сервером.
-2. class Server - основной функционал (создание пользователей, хранение пользователей и сообщений, отправка сообщений пользователям).
-3. class User - информация о пользователе (логин, пароль, имя).
-4. class Message - информация о сообщении (отправитель, получатель, сам текст сообщения)
-5. class Files - работа с файлами: чтение произвольной строки и добавление строк в конец файла.
-6. class Messages - расширяет Files для хранения сообщений.
-7. class Users - расширяет Files для хранения пользователей.
+## How to use:
+The app was tested with `Linux Mint 20.3` and `21` and `Fedora 36`. To compilate use `gcc 9.3.0` or higher and `make` utility.
 
-## Запуск:
-Приложение тестировалось под `Linux Mint 20.3`, `gcc 9.3.0`, используется утилита `make`. Исходники собираются в два исполняемых файла: `chat-server` - сервер и `chat-client` - клиент. При запуске `chat-client` из командной строки в аргументах можно указать ip сервера, поумолчанию `127.0.0.1`
+App is compiled to 2 binary files: `chat-server` - server and `chat-client`. You should install apropriate msql library before compiling.
+
+Before first start `chat-server` pursure command `mysql < init.sql` to initiate database.
+
+To start `chat-client` use command `/src/chat-client [ip]` where `ip` is server's ip addres by default it is `127.0.0.1`

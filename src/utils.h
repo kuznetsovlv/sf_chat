@@ -26,3 +26,13 @@ std::shared_ptr<User> bytesToUser(const uint8_t*);
 void addType(uint8_t*, const rtype);
 
 const rtype getType(const uint8_t*);
+
+char *str2char(const std::string&);
+
+template <class T> void clear(T *pointer)
+{
+	if(pointer)
+	{
+		delete[] pointer;
+	}
+}

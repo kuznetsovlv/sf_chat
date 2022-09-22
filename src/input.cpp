@@ -19,3 +19,11 @@ bool isLogin(const std::string &str)
 	}
 	return true;
 }
+
+void cutTo(std::string &str, const size_t maxSize)
+{
+	if(str.size() > maxSize)
+	{
+		str.erase(maxSize);
+	}
+}
