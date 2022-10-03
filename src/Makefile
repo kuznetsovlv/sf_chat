@@ -2,7 +2,7 @@
 common = memoryAllocationException.o message.o networkException.o send.o user.o utils.o
 client_objects = chat-client.o client.o input.o ${common}
 server_objects = chat-server.o cripto.o server.o sql.o ${common}
-standard = c++17
+standard = c++20
 
 .PHONY: all
 all: chat-client chat-server
