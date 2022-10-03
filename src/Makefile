@@ -1,6 +1,6 @@
 #Makefile
 common = memoryAllocationException.o message.o networkException.o send.o user.o utils.o
-client_objects = chat-client.o client.o input.o ${common}
+client_objects = chat-client.o client.o input.o logger.o ${common}
 server_objects = chat-server.o cripto.o server.o sql.o ${common}
 standard = c++20
 
@@ -16,9 +16,10 @@ chat-client.o: client.h utils.h
 chat-server.o: chat-server.cpp server.h utils.h
 	gcc -o chat-server.o chat-server.cpp -c -std=${standard}
 
-client.o: client.h client.cpp input.h networkException.h message.h rtype.h send.h user.h utils.h
+client.o: client.h client.cpp input.h logger.h networkException.h message.h rtype.h send.h user.h utils.h
 cripto.o: cripto.h
 input.o: input.h
+logger.o: logger.h
 networkException.o: networkException.h
 memoryAllocationException.o: memoryAllocationException.h
 message.o: message.h user.h
