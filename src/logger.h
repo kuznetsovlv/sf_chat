@@ -21,6 +21,7 @@ class Logger
 	private:
 	std::filesystem::path _path;
 	std:: fstream _file;
+	std::shared_mutex _mutex;
 	void init();
 
 	protected:
