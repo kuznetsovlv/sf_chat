@@ -27,13 +27,14 @@ class Logger
 	protected:
 	void input(std::string&);
 	void output(const std::string&);
-	void setPath(const std::filesystem::path&);
 
 	public:
 	Logger(const std::filesystem::path&);
 	Logger(Logger&) = delete;
 	Logger(Logger&&) = delete;
 	virtual ~Logger();
+
+	void setPath(const std::filesystem::path&);
 
 	Logger &operator=(Logger&) = delete;
 	Logger &operator=(Logger&&) = delete;
