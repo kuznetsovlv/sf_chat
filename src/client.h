@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "message.h"
+#include "message_logger.h"
 #include "rtype.h"
 #include "user.h"
 
@@ -11,6 +12,7 @@ class Client final
 	const uint16_t _port;
 	const int _sockd;
 	std::string _login;
+	MessageLogger _logger;
 
 	void chat();
 	void login();
