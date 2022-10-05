@@ -1,5 +1,7 @@
 #include <iostream>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -26,7 +28,11 @@ Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(A
 
 void Client::chat()
 {
-	while(true)
+
+	std::thread networkMonitoring([this](){networkMonitor();});
+
+	networkMonitoring.join();
+/*	while(true)
 	{
 		showMessages();
 
@@ -85,18 +91,27 @@ void Client::chat()
 				message.clear();
 			}
 		}
-	}
+	}*/
 }
 
 void Client::logout()
 {
+	_ioMutex.lock();
+	_networkMutex.lock();
+
 	const uint32_t logoutType = htonl(static_cast<uint32_t>(rtype::LOGOUT));
+
 	write(_sockd, &logoutType, sizeof(uint32_t));
+
 
 	if(!success(_sockd))
 	{
 		throw NetworkException("Server error");
 	}
+
+		_login.clear();
+	_networkMutex.unlock();
+	_ioMutex.unlock();
 }
 
 void Client::login()
@@ -214,12 +229,18 @@ bool Client::request(const Message &message, const rtype type)
 	return successSent;
 }
 
-void Client::showMessages()
+void Client::networkMonitor()
 {
 	const uint32_t emptyType = htonl(static_cast<uint32_t>(rtype::EMPTY));
 	const uint32_t successType = htonl(static_cast<uint32_t>(rtype::SUCCESS));
-	while(true)
+	while(!_login.empty())
 	{
+		_networkMutex.lock();
+		if(_login.empty())
+		{
+			_networkMutex.unlock();
+			return;
+		}
 		write(_sockd, &emptyType, sizeof(uint32_t));
 
 		uint8_t sizeData[2 * sizeof(uint32_t)];
@@ -237,19 +258,11 @@ void Client::showMessages()
 				case rtype::EMPTY:
 				{
 					delete [] data;
-					return;
 				}
 				case rtype::MESSAGE:
 				{
 					std::shared_ptr<Message> message = bytesToMessage(data);
-					std::cout << std::endl;
-					std::cout << (message->from() == _login ? "Me" : message->from()) << " (" << message->date() << "):" << std::endl;
-					if(message->to() != ALL)
-					{
-						std::cout << "@" << message->to() << ": ";
-					}
-
-					std::cout << message->msg() << std::endl << std::endl;
+					_logger.input(*message);
 
 					delete [] data;
 					break;
@@ -257,14 +270,17 @@ void Client::showMessages()
 				default:
 				{
 					delete [] data;
+					_networkMutex.unlock();
 					throw NetworkException("Server error. Message data failed.");
 				}
 			}
 		}
 		else
 		{
+			_networkMutex.unlock();
 			throw NetworkException("Server error. Message size failed.");
 		}
+		_networkMutex.unlock();
 	}
 }
 

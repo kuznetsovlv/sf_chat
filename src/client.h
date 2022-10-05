@@ -1,4 +1,5 @@
 #pragma once
+#include <mutex>
 #include <string>
 #include "message.h"
 #include "message_logger.h"
@@ -13,6 +14,8 @@ class Client final
 	const int _sockd;
 	std::string _login;
 	MessageLogger _logger;
+	std::mutex _ioMutex;
+	std::mutex _networkMutex;
 
 	void chat();
 	void login();
@@ -21,7 +24,9 @@ class Client final
 	void registerUser();
 	bool request(const User&, const rtype);
 	bool request(const Message&, const rtype);
+	void networkMonitor();
 	void showMessages();
+	void input();
 
 	public:
 	explicit Client(const std::string&);
