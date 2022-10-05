@@ -4,16 +4,11 @@
 #include "message_logger.h"
 #include "logger.h"
 #include "message.h"
-#include "user.h"
 #include "utils.h"
 
 const char GROUP_SEPARATOR = 0x1d;
 
-MessageLogger::MessageLogger():MessageLogger(ALL)
-{
-}
-
-MessageLogger::MessageLogger(const std::filesystem::path &path):Logger(path)
+MessageLogger::MessageLogger()noexcept
 {
 }
 

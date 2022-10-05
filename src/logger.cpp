@@ -15,24 +15,13 @@ const char *file_exception::what()const noexcept
 	return str.c_str();
 }
 
-Logger::Logger(const std::filesystem::path &path):_path(path)
+Logger::Logger()noexcept
 {
-	init();
 }
 
 Logger::~Logger()
 {
-	_file.close();
-}
-
-void Logger::init()
-{
-	_file = std::fstream(_path, std::ios::in | std::ios::app);
-
-	if(!_file.is_open())
-	{
-		throw file_exception(_path);
-	}
+	close();
 }
 
 void Logger::input(std::string &str)
@@ -40,6 +29,11 @@ void Logger::input(std::string &str)
 	str.clear();
 
 	_mutex.lock_shared();
+
+	if(_path.empty() || !_file.is_open())
+	{
+		return;
+	}
 
 	while(!_file.eof())
 	{
@@ -61,22 +55,41 @@ void Logger::input(std::string &str)
 void Logger::output(const std::string &str)
 {
 	_mutex.lock();
-	_file << str << std::endl;
+	if(!_path.empty() && _file.is_open())
+	{
+		_file << str << std::endl;
+	}
 	_mutex.unlock();
 }
 
-void Logger::setPath(const std::filesystem::path &path)
+void Logger::open(const std::filesystem::path &path)
+{
+	if(_path == path)
+	{
+		return;
+	}
+
+	close();
+
+	_mutex.lock();
+	_path = path;
+	_file = std::fstream(_path, std::ios::in | std::ios::app);
+
+	if(!_file.is_open())
+	{
+		throw file_exception(_path);
+	}
+}
+
+void Logger::close()
 {
 	_mutex.lock();
 
-	if(_file.is_open())
+	if(!_path.empty())
 	{
+		_path.clear();
 		_file.close();
 	}
-
-	_path = path;
-
-	init();
 
 	_mutex.unlock();
 }

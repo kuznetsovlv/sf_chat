@@ -7,8 +7,7 @@
 class MessageLogger final: public Logger
 {
 	public:
-	MessageLogger();
-	MessageLogger(const std::filesystem::path&);
+	explicit MessageLogger()noexcept;
 	MessageLogger(MessageLogger&) = delete;
 	MessageLogger(MessageLogger&&) = delete;
 

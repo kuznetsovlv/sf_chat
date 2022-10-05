@@ -22,19 +22,19 @@ class Logger
 	std::filesystem::path _path;
 	std:: fstream _file;
 	std::shared_mutex _mutex;
-	void init();
 
 	protected:
 	void input(std::string&);
 	void output(const std::string&);
 
 	public:
-	Logger(const std::filesystem::path&);
+	explicit Logger()noexcept;
 	Logger(Logger&) = delete;
 	Logger(Logger&&) = delete;
 	virtual ~Logger();
 
-	void setPath(const std::filesystem::path&);
+	void open(const std::filesystem::path&);
+	void close();
 
 	Logger &operator=(Logger&) = delete;
 	Logger &operator=(Logger&&) = delete;

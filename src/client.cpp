@@ -111,7 +111,8 @@ void Client::logout()
 		throw NetworkException("Server error");
 	}
 
-		_login.clear();
+	_logger.close();
+	_login.clear();
 	_networkMutex.unlock();
 	_ioMutex.unlock();
 }
@@ -146,7 +147,7 @@ bool Client::loginAndChat(const User &user)
 	if(request(user, rtype::LOGIN) && success(_sockd))
 	{
 		_login = user.login();
-		_logger.setPath(_login + ".log");
+		_logger.open(_login + ".log");
 		std::cout << "Welcom to the chat, " << user.login() << "!" << std::endl;
 		chat();
 		return true;
