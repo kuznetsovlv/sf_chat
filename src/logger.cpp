@@ -79,6 +79,7 @@ void Logger::open(const std::filesystem::path &path)
 	{
 		throw file_exception(_path);
 	}
+	_mutex.unlock();
 }
 
 void Logger::close()
