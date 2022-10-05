@@ -223,7 +223,11 @@ bool Client::request(const Message &message, const rtype type)
 	size_t size;
 	uint8_t *data = toBytes(message, size);
 	addType(data, type);
+
+	_networkMutex.lock();
 	bool successSent = send(_sockd, data, size);
+	_networkMutex.unlock();
+
 	delete [] data;
 
 	return successSent;
