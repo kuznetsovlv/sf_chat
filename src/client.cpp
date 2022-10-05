@@ -30,8 +30,10 @@ void Client::chat()
 {
 
 	std::thread networkMonitoring([this](){networkMonitor();});
+	std::thread showingMessages([this](){showMessages();});
 
 	networkMonitoring.join();
+	showingMessages.join();
 /*	while(true)
 	{
 		showMessages();
@@ -144,7 +146,7 @@ bool Client::loginAndChat(const User &user)
 	if(request(user, rtype::LOGIN) && success(_sockd))
 	{
 		_login = user.login();
-		_logger.setPath(_login);
+		_logger.setPath(_login + ".log");
 		std::cout << "Welcom to the chat, " << user.login() << "!" << std::endl;
 		chat();
 		return true;
@@ -322,4 +324,33 @@ void Client::start()
 
 	std::cout << "Bye!" << std::endl;
 	close(_sockd);
+}
+
+void Client::showMessages()
+{
+	while(!_login.empty())
+	{
+		_ioMutex.lock();
+		if(_login.empty())
+		{
+			_ioMutex.unlock();
+			return;
+		}
+
+		const std::shared_ptr<Message> message = _logger.next();
+
+		if(message)
+		{
+			std::cout << std::endl;
+			std::cout << (message->from() == _login ? "Me" : message->from()) << " (" << message->date() << "):" << std::endl;
+			if(message->to() != ALL)
+			{
+				std::cout << "@" << message->to() << ": ";
+			}
+
+			std::cout << message->msg() << std::endl << std::endl;
+		}
+
+		_ioMutex.unlock();
+	}
 }

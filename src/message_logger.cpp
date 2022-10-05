@@ -35,7 +35,7 @@ std::shared_ptr<Message> MessageLogger::next()
 
 	if(line.empty())
 	{
-		return std::make_shared<Message>();
+		return nullptr;
 	}
 
 	std::string strs[5];
