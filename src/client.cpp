@@ -35,7 +35,7 @@ void extractTo(std::string &message, std::string &to)
 	to = ALL;
 }
 
-Client::Client(const std::string &ip):_showGreating(true),_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
+Client::Client(const std::string &ip):_showGreating(true),_lastMessageId(0),_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
 {
 	if(_sockd == -1)
 	{
@@ -46,6 +46,7 @@ Client::Client(const std::string &ip):_showGreating(true),_ip(ip),_port(SERVER_P
 void Client::chat()
 {
 	_showGreating = true;
+	_lastMessageId = 0;
 	showMessages();
 
 	std::thread networkMonitoring([this](){networkMonitor();});
@@ -197,7 +198,20 @@ bool Client::request(const Message &message, const rtype type)
 	return successSent;
 }
 
-void Client::printMessage(const Message& message)const noexcept
+bool Client::request(const uint32_t messageId, const rtype type)
+{
+	size_t size;
+	uint8_t *data = toBytes(messageId, size);
+	addType(data, type);
+
+	write(_sockd, data, 2 *sizeof(uint32_t));
+
+	delete [] data;
+
+	return true;
+}
+
+void Client::printMessage(const Message& message)noexcept
 {
 	std::cout << (message.from() == _login ? "Me" : message.from()) << " (" << message.date() << "):" << std::endl;
 
@@ -216,13 +230,16 @@ void Client::showMessages()
 	do
 	{
 		message = _logger.next();
-		printMessage(*message);
+		if(message)
+		{
+			printMessage(*message);
+			_lastMessageId = message->id();
+		}
 	} while(message);
 }
 
 void Client::networkMonitor()
 {
-	const uint32_t emptyType = htonl(static_cast<uint32_t>(rtype::EMPTY));
 	const uint32_t successType = htonl(static_cast<uint32_t>(rtype::SUCCESS));
 	while(!_login.empty())
 	{
@@ -232,8 +249,8 @@ void Client::networkMonitor()
 			_networkMutex.unlock();
 			return;
 		}
-		write(_sockd, &emptyType, sizeof(uint32_t));
 
+		request(_lastMessageId, rtype::MESSAGE_ID);
 		uint8_t sizeData[2 * sizeof(uint32_t)];
 		read(_sockd, sizeData, 2 *sizeof(uint32_t));
 
@@ -253,7 +270,11 @@ void Client::networkMonitor()
 				case rtype::MESSAGE:
 				{
 					std::shared_ptr<Message> message = bytesToMessage(data);
-					_logger.input(*message);
+					if(message)
+					{
+						_logger.input(*message);
+						_lastMessageId = message->id();
+					}
 
 					delete [] data;
 					break;

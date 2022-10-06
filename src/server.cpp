@@ -236,6 +236,8 @@ void session(Server &server, const int sockd)
 					}
 					break;
 				}
+				case rtype::MESSAGE_ID:
+					lastMessageId = bytesToMessageId(buffer);
 				case rtype::EMPTY:
 				{
 					bool locked = false;

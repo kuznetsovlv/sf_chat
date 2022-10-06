@@ -19,9 +19,13 @@ uint8_t *toBytes(const Message&, size_t&);
 
 uint8_t *toBytes(const User&, size_t&);
 
+uint8_t *toBytes(const uint32_t, size_t&);
+
 std::shared_ptr<Message> bytesToMessage(const uint8_t*);
 
 std::shared_ptr<User> bytesToUser(const uint8_t*);
+
+const uint32_t bytesToMessageId(const uint8_t*);
 
 void addType(uint8_t*, const rtype);
 

@@ -2,3 +2,4 @@
 *.data
 chat-client
 chat-server
+*.log
