@@ -4,6 +4,8 @@
 #include <string>
 #include "logger.h"
 
+#include <iostream>
+
 file_exception::file_exception(const std::filesystem::path &path)noexcept:_path(path)
 {
 }
@@ -55,6 +57,7 @@ void Logger::output(const std::string &str)
 	_mutex.lock();
 	if(!_path.empty() && _file.is_open())
 	{
+		std::cout << "Logger: " << str << std::endl;
 		_file << str << std::endl;
 	}
 	_mutex.unlock();
