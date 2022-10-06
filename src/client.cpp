@@ -18,7 +18,7 @@ const std::string emptyStr;
 const size_t MAX_LOGIN_LENGTH = 254;
 const size_t MAX_MESSAGE_LENGTH = 1022;
 
-Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
+Client::Client(const std::string &ip):_showGreating(true),_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
 {
 	if(_sockd == -1)
 	{
@@ -30,10 +30,10 @@ void Client::chat()
 {
 
 	std::thread networkMonitoring([this](){networkMonitor();});
-	std::thread showingMessages([this](){showMessages();});
+	std::thread messageMonitoring([this](){monitorMessages();});
 
 	networkMonitoring.join();
-	showingMessages.join();
+	messageMonitoring.join();
 /*	while(true)
 	{
 		showMessages();
@@ -236,6 +236,18 @@ bool Client::request(const Message &message, const rtype type)
 	return successSent;
 }
 
+void Client::printMessage(const Message& message)const noexcept
+{
+	std::cout << (message.from() == _login ? "Me" : message.from()) << " (" << message.date() << "):" << std::endl;
+
+	if(message.to() != ALL)
+	{
+		std::cout << "@" << message.to() << ": ";
+	}
+
+	std::cout << message.msg() << std::endl << std::endl;
+}
+
 void Client::networkMonitor()
 {
 	const uint32_t emptyType = htonl(static_cast<uint32_t>(rtype::EMPTY));
@@ -291,6 +303,29 @@ void Client::networkMonitor()
 	}
 }
 
+void Client::monitorMessages()
+{
+	while(!_login.empty())
+	{
+		_ioMutex.lock();
+		if(_login.empty())
+		{
+			_ioMutex.unlock();
+			return;
+		}
+
+		const std::shared_ptr<Message> message = _logger.next();
+
+		if(message)
+		{
+			_showGreating = true;
+			printMessage(*message);
+		}
+
+		_ioMutex.unlock();
+	}
+}
+
 void Client::start()
 {
 	struct sockaddr_in server;
@@ -325,33 +360,4 @@ void Client::start()
 
 	std::cout << "Bye!" << std::endl;
 	close(_sockd);
-}
-
-void Client::showMessages()
-{
-	while(!_login.empty())
-	{
-		_ioMutex.lock();
-		if(_login.empty())
-		{
-			_ioMutex.unlock();
-			return;
-		}
-
-		const std::shared_ptr<Message> message = _logger.next();
-
-		if(message)
-		{
-			std::cout << std::endl;
-			std::cout << (message->from() == _login ? "Me" : message->from()) << " (" << message->date() << "):" << std::endl;
-			if(message->to() != ALL)
-			{
-				std::cout << "@" << message->to() << ": ";
-			}
-
-			std::cout << message->msg() << std::endl << std::endl;
-		}
-
-		_ioMutex.unlock();
-	}
 }

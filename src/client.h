@@ -9,6 +9,7 @@
 class Client final
 {
 	private:
+	bool _showGreating;
 	const std::string _ip;
 	const uint16_t _port;
 	const int _sockd;
@@ -24,8 +25,10 @@ class Client final
 	void registerUser();
 	bool request(const User&, const rtype);
 	bool request(const Message&, const rtype);
-	void networkMonitor();
+	void printMessage(const Message&)const noexcept;
 	void showMessages();
+	void networkMonitor();
+	void monitorMessages();
 	void input();
 
 	public:
