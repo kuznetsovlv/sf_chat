@@ -28,12 +28,16 @@ Client::Client(const std::string &ip):_showGreating(true),_ip(ip),_port(SERVER_P
 
 void Client::chat()
 {
+	_showGreating = true;
+	showMessages();
 
 	std::thread networkMonitoring([this](){networkMonitor();});
 	std::thread messageMonitoring([this](){monitorMessages();});
+	std::thread inputMonitoring([this](){inputMonitor();});
 
 	networkMonitoring.join();
 	messageMonitoring.join();
+	inputMonitoring.join();
 /*	while(true)
 	{
 		showMessages();
@@ -248,6 +252,17 @@ void Client::printMessage(const Message& message)const noexcept
 	std::cout << message.msg() << std::endl << std::endl;
 }
 
+void Client::showMessages()
+{
+	std::shared_ptr<Message> message = nullptr;
+
+	do
+	{
+		message = _logger.next();
+		printMessage(*message);
+	} while(message);
+}
+
 void Client::networkMonitor()
 {
 	const uint32_t emptyType = htonl(static_cast<uint32_t>(rtype::EMPTY));
@@ -324,6 +339,10 @@ void Client::monitorMessages()
 
 		_ioMutex.unlock();
 	}
+}
+
+void Client::inputMonitor()
+{
 }
 
 void Client::start()
