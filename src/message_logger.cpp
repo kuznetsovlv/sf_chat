@@ -12,7 +12,7 @@ MessageLogger::MessageLogger()noexcept
 {
 }
 
-void MessageLogger::input(Message &message)
+void MessageLogger::output(Message &message)
 {
 	if(message.empty())
 	{
@@ -20,13 +20,13 @@ void MessageLogger::input(Message &message)
 	}
 
 	std::string result = std::to_string(message.id()) + GROUP_SEPARATOR + message.from() + GROUP_SEPARATOR + message.to() + GROUP_SEPARATOR + message.date() + GROUP_SEPARATOR + message.msg();
-	Logger::input(result);
+	Logger::output(result);
 }
 
 std::shared_ptr<Message> MessageLogger::next()
 {
 	std::string line;
-	output(line);
+	input(line);
 
 	if(line.empty())
 	{

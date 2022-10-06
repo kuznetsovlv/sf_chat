@@ -37,11 +37,9 @@ void Logger::input(std::string &str)
 
 	while(!_file.eof())
 	{
-		char c;
+		char c = _file.get();
 
-		_file.get(c);
-
-		if(c == 0xa)
+		if(c == 0xa || _file.eof())
 		{
 			break;
 		}

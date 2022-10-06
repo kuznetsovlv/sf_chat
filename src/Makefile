@@ -16,7 +16,7 @@ chat-client.o: client.h utils.h
 chat-server.o: chat-server.cpp server.h utils.h
 	gcc -o chat-server.o chat-server.cpp -c -std=${standard}
 
-client.o: client.h client.cpp input.h logger.h networkException.h message.h message_logger.h rtype.h send.h user.h utils.h
+client.o: client.h client.cpp input.h networkException.h message.h message_logger.h rtype.h send.h user.h utils.h
 cripto.o: cripto.h
 input.o: input.h
 logger.o: logger.h

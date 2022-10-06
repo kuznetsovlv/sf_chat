@@ -11,7 +11,7 @@ class MessageLogger final: public Logger
 	MessageLogger(MessageLogger&) = delete;
 	MessageLogger(MessageLogger&&) = delete;
 
-	void input(Message&);
+	void output(Message&);
 	std::shared_ptr<Message>next();
 
 	MessageLogger &operator=(MessageLogger&) = delete;

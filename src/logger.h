@@ -20,7 +20,7 @@ class Logger
 {
 	private:
 	std::filesystem::path _path;
-	std:: fstream _file;
+	std::fstream _file;
 	std::shared_mutex _mutex;
 
 	protected:

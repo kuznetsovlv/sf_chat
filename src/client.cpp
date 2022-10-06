@@ -204,7 +204,7 @@ bool Client::request(const uint32_t messageId, const rtype type)
 	uint8_t *data = toBytes(messageId, size);
 	addType(data, type);
 
-	write(_sockd, data, 2 *sizeof(uint32_t));
+	write(_sockd, data, size);
 
 	delete [] data;
 
@@ -266,13 +266,14 @@ void Client::networkMonitor()
 				case rtype::EMPTY:
 				{
 					delete [] data;
+					break;
 				}
 				case rtype::MESSAGE:
 				{
 					std::shared_ptr<Message> message = bytesToMessage(data);
 					if(message)
 					{
-						_logger.input(*message);
+						_logger.output(*message);
 						_lastMessageId = message->id();
 					}
 
