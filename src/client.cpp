@@ -18,6 +18,23 @@ const std::string emptyStr;
 const size_t MAX_LOGIN_LENGTH = 254;
 const size_t MAX_MESSAGE_LENGTH = 1022;
 
+void extractTo(std::string &message, std::string &to)
+{
+	if(message.front() == '@')
+	{
+		const auto pos = message.find(":");
+
+		if(pos != std::string::npos)
+		{
+			to = message.substr(1, pos - 1);
+			message.erase(0, pos + 1);
+			return;
+		}
+	}
+
+	to = ALL;
+}
+
 Client::Client(const std::string &ip):_showGreating(true),_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
 {
 	if(_sockd == -1)
@@ -38,66 +55,6 @@ void Client::chat()
 	networkMonitoring.join();
 	messageMonitoring.join();
 	inputMonitoring.join();
-/*	while(true)
-	{
-		showMessages();
-
-		std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
-
-		std::string message;
-		while(message.empty())
-		{
-			std::getline(std::cin, message);
-		}
-
-		if(message == "!quit")
-		{
-			logout();
-			return;
-		}
-
-		std::string to;
-
-		if(message.front() == '@')
-		{
-			auto pos = message.find(':');
-
-			if(pos == std::string::npos)
-			{
-				to = ALL;
-			}
-			else
-			{
-				to = message.substr(1, pos - 1);
-				message.erase(0, pos + 1);
-			}
-		}
-		else
-		{
-			to = ALL;
-		}
-
-		while(!message.empty())
-		{
-			const std::string first = message.substr(0, MAX_MESSAGE_LENGTH);
-
-			const Message msg(first, _login, to);
-
-			if(!request(msg, rtype::MESSAGE) || !success(_sockd))
-			{
-				throw NetworkException("Sending message failed");
-			}
-
-			if(message.size() > MAX_MESSAGE_LENGTH)
-			{
-				message.erase(0, MAX_MESSAGE_LENGTH);
-			}
-			else
-			{
-				message.clear();
-			}
-		}
-	}*/
 }
 
 void Client::logout()
@@ -343,6 +300,60 @@ void Client::monitorMessages()
 
 void Client::inputMonitor()
 {
+	while(true)
+	{
+		_ioMutex.lock();
+
+		if(_showGreating)
+		{
+			std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
+			_showGreating = false;
+		}
+
+		std::string message;
+		std::getline(std::cin, message);
+
+		_ioMutex.unlock();
+
+		if(message.empty())
+		{
+			continue;
+		}
+
+		if(message == "!quit")
+		{
+			logout();
+			return;
+		}
+
+		std::string to;
+		extractTo(message, to);
+
+		while(!message.empty())
+		{
+			const std::string first = message.substr(0, MAX_MESSAGE_LENGTH);
+
+			const Message msg(first, _login, to);
+
+			_networkMutex.lock();
+			const bool sendingSuccess = request(msg, rtype::MESSAGE) && success(_sockd);
+			_networkMutex.unlock();
+
+			if(!sendingSuccess)
+			{
+				throw NetworkException("Sending  message failed");
+			}
+
+			if(message.size() > MAX_MESSAGE_LENGTH)
+			{
+				message.erase(0, MAX_MESSAGE_LENGTH);
+			}
+			else
+			{
+				message.clear();
+			}
+		}
+	}
 }
 
 void Client::start()
