@@ -189,26 +189,45 @@ bool Client::request(const Message &message, const rtype type)
 	uint8_t *data = toBytes(message, size);
 	addType(data, type);
 
-	_networkMutex.lock();
 	bool successSent = send(_sockd, data, size);
-	_networkMutex.unlock();
 
 	delete [] data;
 
 	return successSent;
 }
 
-bool Client::request(const uint32_t messageId, const rtype type)
+const std::shared_ptr<Message> Client::requestNextMessage()
 {
 	size_t size;
-	uint8_t *data = toBytes(messageId, size);
-	addType(data, type);
+	uint8_t *data = toBytes(_lastMessageId, size);
+	addType(data, rtype::MESSAGE_ID);
 
 	write(_sockd, data, size);
 
 	delete [] data;
 
-	return true;
+	uint8_t sizeData[2 * sizeof(uint32_t)];
+	read(_sockd, sizeData, 2 * sizeof(uint32_t));
+
+	std::shared_ptr<Message> message = nullptr;
+
+	if(getType(sizeData) == rtype::SIZE)
+	{
+		const size_t size = static_cast<size_t>(ntohl(*(reinterpret_cast<uint32_t*>(sizeData) + 1)));
+		uint8_t *data = new uint8_t[size];
+		const uint32_t successType = htonl(static_cast<uint32_t>(rtype::SUCCESS));
+		write(_sockd, reinterpret_cast<const uint8_t*>(&successType), sizeof(uint32_t));
+		read(_sockd, data, size);
+
+		if(getType(data) == rtype::MESSAGE)
+		{
+			message = bytesToMessage(data);
+		}
+
+		delete [] data;
+	}
+
+	return message;
 }
 
 void Client::printMessage(const Message& message)noexcept
@@ -250,49 +269,14 @@ void Client::networkMonitor()
 			return;
 		}
 
-		request(_lastMessageId, rtype::MESSAGE_ID);
-		uint8_t sizeData[2 * sizeof(uint32_t)];
-		read(_sockd, sizeData, 2 *sizeof(uint32_t));
+		const std::shared_ptr message = requestNextMessage();
 
-		if(getType(sizeData) == rtype::SIZE)
+		if(message)
 		{
-			const size_t size = static_cast<size_t>(ntohl(*reinterpret_cast<uint32_t*>(sizeData + sizeof(uint32_t))));
-			uint8_t *data = new uint8_t[size];
-			write(_sockd, reinterpret_cast<const uint8_t*>(&successType), sizeof(uint32_t));
-			read(_sockd, data, size);
-
-			switch(getType(data))
-			{
-				case rtype::EMPTY:
-				{
-					delete [] data;
-					break;
-				}
-				case rtype::MESSAGE:
-				{
-					std::shared_ptr<Message> message = bytesToMessage(data);
-					if(message)
-					{
-						_logger.output(*message);
-						_lastMessageId = message->id();
-					}
-
-					delete [] data;
-					break;
-				}
-				default:
-				{
-					delete [] data;
-					_networkMutex.unlock();
-					throw NetworkException("Server error. Message data failed.");
-				}
-			}
+			_logger.output(*message);
+			_lastMessageId = message->id();
 		}
-		else
-		{
-			_networkMutex.unlock();
-			throw NetworkException("Server error. Message size failed.");
-		}
+
 		_networkMutex.unlock();
 	}
 }
@@ -347,6 +331,8 @@ void Client::inputMonitor()
 			logout();
 			return;
 		}
+
+		_showGreating = true;
 
 		std::string to;
 		extractTo(message, to);

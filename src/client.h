@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include <mutex>
 #include <string>
 #include "message.h"
@@ -26,7 +27,7 @@ class Client final
 	void registerUser();
 	bool request(const User&, const rtype);
 	bool request(const Message&, const rtype);
-	bool request(const uint32_t, const rtype);
+	const std::shared_ptr<Message> requestNextMessage();
 	void printMessage(const Message&)noexcept;
 	void showMessages();
 	void networkMonitor();
