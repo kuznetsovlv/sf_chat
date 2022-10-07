@@ -270,14 +270,13 @@ void Client::networkMonitor()
 		}
 
 		const std::shared_ptr message = requestNextMessage();
+		_networkMutex.unlock();
 
 		if(message)
 		{
 			_logger.output(*message);
 			_lastMessageId = message->id();
 		}
-
-		_networkMutex.unlock();
 	}
 }
 
@@ -308,6 +307,7 @@ void Client::inputMonitor()
 {
 	while(true)
 	{
+		std::this_thread::sleep_for(std::chrono::microseconds(500));
 		_ioMutex.lock();
 
 		if(_showGreating)
