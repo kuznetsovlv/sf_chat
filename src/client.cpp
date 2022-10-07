@@ -109,7 +109,7 @@ bool Client::loginAndChat(const User &user)
 	if(request(user, rtype::LOGIN) && success(_sockd))
 	{
 		_login = user.login();
-		_logger.open(_login + ".log");
+		_logger.open("./" + _login + ".log");
 		std::cout << "Welcom to the chat, " << user.login() << "!" << std::endl;
 		chat();
 		return true;
