@@ -22,6 +22,7 @@ class Logger
 	std::filesystem::path _path;
 	std::fstream _file;
 	std::shared_mutex _mutex;
+	std::fstream::pos_type _pos;
 
 	protected:
 	void input(std::string&);

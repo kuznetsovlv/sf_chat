@@ -30,21 +30,21 @@ void Logger::input(std::string &str)
 
 	_mutex.lock_shared();
 
-	if(_path.empty() || !_file.is_open())
+	if(!_path.empty() && _file.is_open())
 	{
-		return;
-	}
-
-	while(!_file.eof())
-	{
-		char c = _file.get();
-
-		if(c == 0xa || _file.eof())
+		_file.seekg(_pos);
+		while(!_file.eof())
 		{
-			break;
-		}
+			char c = _file.get();
 
-		str += c;
+			if(c == 0xa || _file.eof())
+			{
+				break;
+			}
+
+			str += c;
+		}
+		_pos = _file.tellg();
 	}
 
 	_mutex.unlock_shared();
@@ -70,7 +70,7 @@ void Logger::open(const std::filesystem::path &path)
 
 	close();
 
-	_mutex.lock();
+	std::lock_guard<std::shared_mutex> lock(_mutex);
 	_path = path;
 	_file.open(path, std::ios::in | std::ios::app);
 
@@ -79,8 +79,9 @@ void Logger::open(const std::filesystem::path &path)
 		throw file_exception(_path);
 	}
 
+	_file.seekg(std::ios_base::beg);
+	_pos = _file.tellg();
 	_file.clear();
-	_mutex.unlock();
 }
 
 void Logger::close()

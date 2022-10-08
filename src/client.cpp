@@ -307,7 +307,6 @@ void Client::inputMonitor()
 {
 	while(true)
 	{
-		std::this_thread::sleep_for(std::chrono::microseconds(500));
 		_ioMutex.lock();
 
 		if(_showGreating)
