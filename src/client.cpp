@@ -49,10 +49,12 @@ void Client::chat()
 	_lastMessageId = 0;
 	showMessages();
 
+	std::thread greatingMonitoring([this](){greatingMonitor();});
 	std::thread networkMonitoring([this](){networkMonitor();});
 	std::thread messageMonitoring([this](){monitorMessages();});
 	std::thread inputMonitoring([this](){inputMonitor();});
 
+	greatingMonitoring.join();
 	networkMonitoring.join();
 	messageMonitoring.join();
 	inputMonitoring.join();
@@ -307,18 +309,34 @@ void Client::inputMonitor()
 {
 	while(true)
 	{
-		_ioMutex.lock();
-
-		if(_showGreating)
-		{
-			std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
-			_showGreating = false;
-		}
-
 		std::string message;
-		std::getline(std::cin, message);
 
-		_ioMutex.unlock();
+		std::thread input([this, &message]()
+		{
+			bool locked = false;
+
+			while(true)
+			{
+				char c = std::cin.get();
+
+				if(c != 0xa)
+				{
+					if(!locked)
+					{
+						_ioMutex.lock();
+						locked = true;
+					}
+					message += c;
+				}
+				else if(locked)
+				{
+					_ioMutex.unlock();
+					return;
+				}
+			}
+		});
+
+		input.join();
 
 		if(message.empty())
 		{
@@ -363,6 +381,27 @@ void Client::inputMonitor()
 	}
 }
 
+void Client::greatingMonitor()
+{
+	while(!_login.empty())
+	{
+		_ioMutex.lock();
+
+		if(_login.empty())
+		{
+			return;
+		}
+
+		if(_showGreating)
+		{
+			std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
+			_showGreating = false;
+		}
+
+		_ioMutex.unlock();
+	}
+}
+
 void Client::start()
 {
 	struct sockaddr_in server;
@@ -396,5 +435,6 @@ void Client::start()
 	} while(comand != 'q' && comand != 'Q');
 
 	std::cout << "Bye!" << std::endl;
+	_logger.close();
 	close(_sockd);
 }

@@ -33,6 +33,7 @@ class Client final
 	void networkMonitor();
 	void monitorMessages();
 	void inputMonitor();
+	void greatingMonitor();
 
 	public:
 	explicit Client(const std::string&);
