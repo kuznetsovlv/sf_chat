@@ -32,21 +32,26 @@ void Logger::input(std::string &str)
 
 	if(!_path.empty() && _file.is_open())
 	{
-		_file.seekg(_pos);
+		_file.seekg(_pos, std::ios_base::beg);
 		while(!_file.eof())
 		{
 			char c = _file.get();
 
-			if(c == 0xa || c < 0 || _file.eof())
+			if(c == 0xa && !_file.eof())
+			{
+				_pos = _file.tellg();
+				break;
+			}
+			else if(c == -1 || _file.eof())
 			{
 				break;
 			}
 
 			str += c;
 		}
-		_pos = _file.tellg();
-		_file.clear();
 	}
+
+	_file.clear();
 
 	_mutex.unlock_shared();
 }
