@@ -389,6 +389,7 @@ void Client::greatingMonitor()
 
 		if(_login.empty())
 		{
+			_ioMutex.unlock();
 			return;
 		}
 
