@@ -1,12 +1,14 @@
 #include <iostream>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "client.h"
 #include "input.h"
 #include "message.h"
-#include "networkException.h"
+#include "network_exception.h"
 #include "rtype.h"
 #include "send.h"
 #include "user.h"
@@ -16,7 +18,24 @@ const std::string emptyStr;
 const size_t MAX_LOGIN_LENGTH = 254;
 const size_t MAX_MESSAGE_LENGTH = 1022;
 
-Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
+void extractTo(std::string &message, std::string &to)
+{
+	if(message.front() == '@')
+	{
+		const auto pos = message.find(":");
+
+		if(pos != std::string::npos)
+		{
+			to = message.substr(1, pos - 1);
+			message.erase(0, pos + 1);
+			return;
+		}
+	}
+
+	to = ALL;
+}
+
+Client::Client(const std::string &ip):_showGreating(true),_lastMessageId(0),_ip(ip),_port(SERVER_PORT),_sockd(socket(AF_INET, SOCK_STREAM, 0))
 {
 	if(_sockd == -1)
 	{
@@ -26,77 +45,40 @@ Client::Client(const std::string &ip):_ip(ip),_port(SERVER_PORT),_sockd(socket(A
 
 void Client::chat()
 {
-	while(true)
-	{
-		showMessages();
+	_showGreating = true;
+	_lastMessageId = 0;
+	showMessages();
 
-		std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
+	std::thread greatingMonitoring([this](){greatingMonitor();});
+	std::thread networkMonitoring([this](){networkMonitor();});
+	std::thread messageMonitoring([this](){monitorMessages();});
+	std::thread inputMonitoring([this](){inputMonitor();});
 
-		std::string message;
-		while(message.empty())
-		{
-			std::getline(std::cin, message);
-		}
-
-		if(message == "!quit")
-		{
-			logout();
-			return;
-		}
-
-		std::string to;
-
-		if(message.front() == '@')
-		{
-			auto pos = message.find(':');
-
-			if(pos == std::string::npos)
-			{
-				to = ALL;
-			}
-			else
-			{
-				to = message.substr(1, pos - 1);
-				message.erase(0, pos + 1);
-			}
-		}
-		else
-		{
-			to = ALL;
-		}
-
-		while(!message.empty())
-		{
-			const std::string first = message.substr(0, MAX_MESSAGE_LENGTH);
-
-			const Message msg(first, _login, to);
-
-			if(!request(msg, rtype::MESSAGE) || !success(_sockd))
-			{
-				throw NetworkException("Sending message failed");
-			}
-
-			if(message.size() > MAX_MESSAGE_LENGTH)
-			{
-				message.erase(0, MAX_MESSAGE_LENGTH);
-			}
-			else
-			{
-				message.clear();
-			}
-		}
-	}
+	greatingMonitoring.join();
+	networkMonitoring.join();
+	messageMonitoring.join();
+	inputMonitoring.join();
 }
 
 void Client::logout()
 {
+	_ioMutex.lock();
+	_networkMutex.lock();
+
 	const uint32_t logoutType = htonl(static_cast<uint32_t>(rtype::LOGOUT));
+
 	write(_sockd, &logoutType, sizeof(uint32_t));
+
 
 	if(!success(_sockd))
 	{
 		throw NetworkException("Server error");
 	}
+
+	_logger.close();
+	_login.clear();
+	_networkMutex.unlock();
+	_ioMutex.unlock();
 }
 
 void Client::login()
@@ -129,6 +111,7 @@ bool Client::loginAndChat(const User &user)
 	if(request(user, rtype::LOGIN) && success(_sockd))
 	{
 		_login = user.login();
+		_logger.open("./" + _login + ".log");
 		std::cout << "Welcom to the chat, " << user.login() << "!" << std::endl;
 		chat();
 		return true;
@@ -207,63 +190,216 @@ bool Client::request(const Message &message, const rtype type)
 	size_t size;
 	uint8_t *data = toBytes(message, size);
 	addType(data, type);
+
 	bool successSent = send(_sockd, data, size);
+
 	delete [] data;
 
 	return successSent;
 }
 
+const std::shared_ptr<Message> Client::requestNextMessage()
+{
+	size_t size;
+	uint8_t *data = toBytes(_lastMessageId, size);
+	addType(data, rtype::MESSAGE_ID);
+
+	write(_sockd, data, size);
+
+	delete [] data;
+
+	uint8_t sizeData[2 * sizeof(uint32_t)];
+	read(_sockd, sizeData, 2 * sizeof(uint32_t));
+
+	std::shared_ptr<Message> message = nullptr;
+
+	if(getType(sizeData) == rtype::SIZE)
+	{
+		const size_t size = static_cast<size_t>(ntohl(*(reinterpret_cast<uint32_t*>(sizeData) + 1)));
+		uint8_t *data = new uint8_t[size];
+		const uint32_t successType = htonl(static_cast<uint32_t>(rtype::SUCCESS));
+		write(_sockd, reinterpret_cast<const uint8_t*>(&successType), sizeof(uint32_t));
+		read(_sockd, data, size);
+
+		if(getType(data) == rtype::MESSAGE)
+		{
+			message = bytesToMessage(data);
+		}
+
+		delete [] data;
+	}
+
+	return message;
+}
+
+void Client::printMessage(const Message& message)noexcept
+{
+	std::cout << (message.from() == _login ? "Me" : message.from()) << " (" << message.date() << "):" << std::endl;
+
+	if(message.to() != ALL)
+	{
+		std::cout << "@" << message.to() << ": ";
+	}
+
+	std::cout << message.msg() << std::endl << std::endl;
+}
+
 void Client::showMessages()
 {
-	const uint32_t emptyType = htonl(static_cast<uint32_t>(rtype::EMPTY));
+	std::shared_ptr<Message> message = nullptr;
+
+	do
+	{
+		message = _logger.next();
+		if(message)
+		{
+			printMessage(*message);
+			_lastMessageId = message->id();
+		}
+	} while(message);
+}
+
+void Client::networkMonitor()
+{
 	const uint32_t successType = htonl(static_cast<uint32_t>(rtype::SUCCESS));
+	while(!_login.empty())
+	{
+		_networkMutex.lock();
+		if(_login.empty())
+		{
+			_networkMutex.unlock();
+			return;
+		}
+
+		const std::shared_ptr message = requestNextMessage();
+		_networkMutex.unlock();
+
+		if(message)
+		{
+			_logger.output(*message);
+			_lastMessageId = message->id();
+		}
+	}
+}
+
+void Client::monitorMessages()
+{
+	while(!_login.empty())
+	{
+		_ioMutex.lock();
+		if(_login.empty())
+		{
+			_ioMutex.unlock();
+			return;
+		}
+
+		const std::shared_ptr<Message> message = _logger.next();
+
+		if(message)
+		{
+			_showGreating = true;
+			printMessage(*message);
+		}
+
+		_ioMutex.unlock();
+	}
+}
+
+void Client::inputMonitor()
+{
 	while(true)
 	{
-		write(_sockd, &emptyType, sizeof(uint32_t));
+		std::string message;
 
-		uint8_t sizeData[2 * sizeof(uint32_t)];
-		read(_sockd, sizeData, 2 *sizeof(uint32_t));
-
-		if(getType(sizeData) == rtype::SIZE)
+		std::thread input([this, &message]()
 		{
-			const size_t size = static_cast<size_t>(ntohl(*reinterpret_cast<uint32_t*>(sizeData + sizeof(uint32_t))));
-			uint8_t *data = new uint8_t[size];
-			write(_sockd, reinterpret_cast<const uint8_t*>(&successType), sizeof(uint32_t));
-			read(_sockd, data, size);
+			bool locked = false;
 
-			switch(getType(data))
+			while(true)
 			{
-				case rtype::EMPTY:
+				char c = std::cin.get();
+
+				if(c != 0xa)
 				{
-					delete [] data;
+					if(!locked)
+					{
+						_ioMutex.lock();
+						locked = true;
+					}
+					message += c;
+				}
+				else if(locked)
+				{
+					_ioMutex.unlock();
 					return;
 				}
-				case rtype::MESSAGE:
-				{
-					std::shared_ptr<Message> message = bytesToMessage(data);
-					std::cout << std::endl;
-					std::cout << (message->from() == _login ? "Me" : message->from()) << " (" << message->date() << "):" << std::endl;
-					if(message->to() != ALL)
-					{
-						std::cout << "@" << message->to() << ": ";
-					}
+			}
+		});
 
-					std::cout << message->msg() << std::endl << std::endl;
+		input.join();
 
-					delete [] data;
-					break;
-				}
-				default:
-				{
-					delete [] data;
-					throw NetworkException("Server error. Message data failed.");
-				}
+		if(message.empty())
+		{
+			continue;
+		}
+
+		if(message == "!quit")
+		{
+			logout();
+			return;
+		}
+
+		_showGreating = true;
+
+		std::string to;
+		extractTo(message, to);
+
+		while(!message.empty())
+		{
+			const std::string first = message.substr(0, MAX_MESSAGE_LENGTH);
+
+			const Message msg(first, _login, to);
+
+			_networkMutex.lock();
+			const bool sendingSuccess = request(msg, rtype::MESSAGE) && success(_sockd);
+			_networkMutex.unlock();
+
+			if(!sendingSuccess)
+			{
+				throw NetworkException("Sending  message failed");
+			}
+
+			if(message.size() > MAX_MESSAGE_LENGTH)
+			{
+				message.erase(0, MAX_MESSAGE_LENGTH);
+			}
+			else
+			{
+				message.clear();
 			}
 		}
-		else
+	}
+}
+
+void Client::greatingMonitor()
+{
+	while(!_login.empty())
+	{
+		_ioMutex.lock();
+
+		if(_login.empty())
 		{
-			throw NetworkException("Server error. Message size failed.");
+			_ioMutex.unlock();
+			return;
 		}
+
+		if(_showGreating)
+		{
+			std::cout << std::endl << "Enter your message. To send message to specific user enter \"@userName:\" at the begining. To quit chat enter \"!quit\"." << std::endl;
+			_showGreating = false;
+		}
+
+		_ioMutex.unlock();
 	}
 }
 
@@ -300,5 +436,6 @@ void Client::start()
 	} while(comand != 'q' && comand != 'Q');
 
 	std::cout << "Bye!" << std::endl;
+	_logger.close();
 	close(_sockd);
 }

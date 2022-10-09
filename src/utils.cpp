@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 #include <arpa/inet.h>
-#include "memoryAllocationException.h"
+#include "memory_allocation_exception.h"
 #include "message.h"
 #include "rtype.h"
 #include "user.h"
@@ -90,6 +90,18 @@ uint8_t *toBytes(const User &user, size_t &size)
 	return data;
 }
 
+uint8_t *toBytes(const uint32_t messageId, size_t &size)
+{
+	size = 2 * sizeof(uint32_t);
+
+	uint8_t *data = new uint8_t[size];
+	uint32_t *p = reinterpret_cast<uint32_t*>(data);
+
+	*(p + 1) = htonl(messageId);
+
+	return data;
+}
+
 std::shared_ptr<Message> bytesToMessage(const uint8_t *data)
 {
 	const char *p = reinterpret_cast<const char*>(data + sizeof(uint32_t));
@@ -124,6 +136,13 @@ std::shared_ptr<User> bytesToUser(const uint8_t *data)
 	const std::string password = std::string(p);
 
 	return std::make_shared<User>(login, fullName, password);
+}
+
+const uint32_t bytesToMessageId(const uint8_t *data)
+{
+	const uint32_t *p = reinterpret_cast<const uint32_t*>(data);
+
+	return ntohl(*(p + 1));
 }
 
 void addType(uint8_t *data, const rtype type)

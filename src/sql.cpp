@@ -178,7 +178,7 @@ std::shared_ptr<Message>SQL::getMessage(const uint32_t lastId, const std::string
 		to = std::string(row[2]);
 	}
 
-	return std::make_shared<Message>(row[0], from, to, row[3], atoi(row[4]));
+	return std::make_shared<Message>(row[0], from, to, row[3], static_cast<uint32_t>(std::stoul((row[4]))));
 }
 
 SQL &SQL::operator=(SQL &&that)noexcept
