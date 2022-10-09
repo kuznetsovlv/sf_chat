@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 #include <arpa/inet.h>
-#include "memoryAllocationException.h"
+#include "memory_allocation_exception.h"
 #include "message.h"
 #include "rtype.h"
 #include "user.h"

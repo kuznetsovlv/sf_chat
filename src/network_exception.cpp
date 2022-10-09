@@ -1,4 +1,4 @@
-#include "networkException.h"
+#include "network_exception.h"
 
 NetworkException::NetworkException(const char *what):_what(what)
 {

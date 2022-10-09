@@ -8,7 +8,7 @@
 #include "client.h"
 #include "input.h"
 #include "message.h"
-#include "networkException.h"
+#include "network_exception.h"
 #include "rtype.h"
 #include "send.h"
 #include "user.h"

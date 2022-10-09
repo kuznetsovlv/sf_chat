@@ -11,7 +11,7 @@
 #include "config.h"
 #include "server.h"
 #include "client.h"
-#include "networkException.h"
+#include "network_exception.h"
 #include "message.h"
 #include "send.h"
 #include "sql.h"
