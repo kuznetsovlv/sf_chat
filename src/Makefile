@@ -12,7 +12,8 @@ chat-client: ${client_objects}
 chat-server: ${server_objects}
 	gcc -o chat-server ${server_objects} -lstdc++ -std=${standard} -pthread -lmysqlclient
 
-chat-client.o: client.h utils.h
+chat-client.o: chat-client.cpp client.h utils.h
+	gcc -o chat-client.o chat-client.cpp -c -std=${standard}
 chat-server.o: chat-server.cpp server.h utils.h
 	gcc -o chat-server.o chat-server.cpp -c -std=${standard}
 
