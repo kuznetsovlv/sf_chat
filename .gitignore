@@ -3,3 +3,4 @@
 chat-client
 chat-server
 *.log
+.idea
