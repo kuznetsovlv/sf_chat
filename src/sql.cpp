@@ -1,6 +1,5 @@
 #include <string>
 #include <cstdlib>
-#include <cstring>
 #include <memory>
 #include <mysql/mysql.h>
 #include "cripto.h"
